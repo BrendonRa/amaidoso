@@ -75,23 +75,23 @@
     ]
   },
   "packageFolders": {
-    "D:\\home\\brendon_23123\\.nuget\\packages\\": {},
+    "C:\\Users\\PC\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\home\\brendon_23123\\Documents\\amaidoso\\backend\\backend\\backend.csproj",
+      "projectUniqueName": "C:\\Users\\PC\\OneDrive\\Documentos\\GitHub\\amaidoso\\backend\\backend\\backend.csproj",
       "projectName": "backend",
-      "projectPath": "D:\\home\\brendon_23123\\Documents\\amaidoso\\backend\\backend\\backend.csproj",
-      "packagesPath": "D:\\home\\brendon_23123\\.nuget\\packages\\",
-      "outputPath": "D:\\home\\brendon_23123\\Documents\\amaidoso\\backend\\backend\\obj\\",
+      "projectPath": "C:\\Users\\PC\\OneDrive\\Documentos\\GitHub\\amaidoso\\backend\\backend\\backend.csproj",
+      "packagesPath": "C:\\Users\\PC\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\PC\\OneDrive\\Documentos\\GitHub\\amaidoso\\backend\\backend\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "D:\\home\\brendon_23123\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\PC\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -100,6 +100,7 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -148,7 +149,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.308/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.305/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

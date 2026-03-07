@@ -6,23 +6,22 @@ import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Link } from 'expo-router';
-import axios from "axios";
 import { useEffect, useState } from 'react';
-import { Text } from '@react-navigation/elements';
+import api from '../services/api';
 
 export default function HomeScreen() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<any>([]);
 
   useEffect(() => {
-    axios.get("http://localhost:5141/weatherforecast")
-      .then(response => {
-        setProducts(response.headers["content-type"] === "application/json; charset=utf-8" ? response.data : []);
+    api.get("/users")
+      .then((response) => {
+        console.log(response.data)
+        setProducts(response.data);
       })
-      .catch(error => {
-        console.log(error);
+      .catch((err) => {
+        console.error("ops! ocorreu um erro" + err);
       });
   }, []);
-
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -33,9 +32,7 @@ export default function HomeScreen() {
         />
       }>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">
-          <Text>Amanhã dia: {products[0]?.date}, estará {products[0]?.temperatureC}°C</Text>
-        </ThemedText>
+        <ThemedText>Usoário {products[0]?.nome}</ThemedText>
         <HelloWave />
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
