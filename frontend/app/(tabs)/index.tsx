@@ -15,7 +15,7 @@ export default function HomeScreen() {
   useEffect(() => {
     api.get("/users")
       .then((response) => {
-        console.log(response.data)
+        console.log(response.data);
         setProducts(response.data);
       })
       .catch((err) => {
