@@ -18,7 +18,7 @@ export default function TelaInicio() {
 
       <TouchableOpacity onPress={() => console.log('Clicou')}>
         <LinearGradient
-          colors={['#6EA8FF', '#3D6DFF']}
+          colors={['#1456FF', '#003DD6']}
           style={styles.button}
         >
           <Text style={styles.buttonText}>Vamos Nessa!</Text>
