@@ -1,5 +1,5 @@
 import React from 'react';
-import {StyleSheet, TextInput} from 'react-native';
+import {StyleSheet, TextInput, TouchableHighlight, TouchableOpacity} from 'react-native';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 
 const TextInputExample = () => {
@@ -21,6 +21,10 @@ const TextInputExample = () => {
           placeholder="useless placeholder"
           keyboardType="numeric"
         />
+
+        <TouchableOpacity>
+            <linearGradient></linearGradient>
+        </TouchableOpacity>
       </SafeAreaView>
     </SafeAreaProvider>
   );
