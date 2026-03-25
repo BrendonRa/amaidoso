@@ -10,9 +10,9 @@ return(
 
         <TouchableOpacity>
            <LinearGradient
-           colors={['#6EA8FF', '#3D6DFF']}
+           colors={['#1456FF', '#003DD6']}
           style={styles.button}>
-             <Text>Sou Idoso</Text>
+             <Text style={styles.buttonText}>Sou Idoso</Text>
             </LinearGradient> 
         </TouchableOpacity>
 
@@ -20,9 +20,9 @@ return(
 
         <TouchableOpacity>
             <LinearGradient
-            colors={['#6EA8FF', '#3D6DFF']}
+            colors={['#1456FF', '#003DD6']}
             style={styles.button}>
-                <Text>Sou Responsavel</Text>
+                <Text style={styles.buttonText}>Sou Responsavel</Text>
             </LinearGradient>
         </TouchableOpacity>
 
@@ -49,7 +49,7 @@ const styles =  StyleSheet.create({
   title:{
     fontSize:20,
     fontWeight:'600',
-    color: '#5A8DEE',
+    color: '#003DD6',
     marginBottom: 8,
     textAlign: 'center',
 
@@ -67,6 +67,7 @@ const styles =  StyleSheet.create({
     borderRadius: 12,
     width: 250,
     alignItems: 'center',
+    marginTop: 8 ,
   },
 
   buttonText: {

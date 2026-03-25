@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#5A8DEE',
+    color: '#003DD6',
     marginBottom: 8,
     textAlign: 'center',
   },
@@ -65,6 +65,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     width: 250,
     alignItems: 'center',
+    marginTop: 67.5,
   },
 
   buttonText: {
