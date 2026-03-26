@@ -1,7 +1,11 @@
-import { app } from "./app"
+import express, { Router } from 'express';
+import { routes } from './routes';
 
-const PORT = "3000"
+const app = express();
+const PORT = "3000";
+
+routes(app)
 
 app.listen(PORT, () => {
-    console.log("O site está funcionando em http://localhost:3000")
+    console.log("O site está funcionando em http://localhost:3000");
 })

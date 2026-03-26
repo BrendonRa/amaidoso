@@ -7,4 +7,9 @@ export class UserController {
     const user = await service.create(req.body);
     return res.json(user);
   }
+  async view(req: Request, res: Response) {
+    const service = new UserService();
+    //const allUsers = await service.view(req.body)
+    //return res.json(allUsers);
+  }
 }
