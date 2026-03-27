@@ -1,10 +1,17 @@
 import mysql from "mysql2";
 
-const connection = mysql.createPool({
+export const connection = mysql.createPool({
     host: process.env.HOST,
     user: process.env.USER,
     password: process.env.PASSWORD,
     database: process.env.NAME
 })
 
-module.exports = connection.promise();
+
+connection.getConnection((err) => {
+  if (err) {
+    console.error('Erro ao conectar:', err);
+    return;
+  }
+  console.log('Conectado ao MySQL!');
+});

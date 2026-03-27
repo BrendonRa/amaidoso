@@ -9,7 +9,7 @@ export class UserController {
   }
   async view(req: Request, res: Response) {
     const service = new UserService();
-    //const allUsers = await service.view(req.body)
-    //return res.json(allUsers);
+    const allUsers = await service.view()
+    return res.json(allUsers);
   }
 }
