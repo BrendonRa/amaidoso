@@ -1,5 +1,6 @@
 import { View, Image, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 
 export default function TelaInicio() {
   return (
@@ -16,7 +17,7 @@ export default function TelaInicio() {
         Crie uma conta e comece a usar
       </Text>
 
-      <TouchableOpacity onPress={() => console.log('Clicou')}>
+      <TouchableOpacity onPress={() => router.push('/tela_inicio2')}>
         <LinearGradient
           colors={['#1456FF', '#003DD6']}
           style={styles.button}
