@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/user.service";
+import { error } from "node:console";
 
 export class UserController {
   async create(req: Request, res: Response) {
@@ -15,7 +16,8 @@ export class UserController {
   }
   async view(req: Request, res: Response) {
     const service = new UserService();
-    const allUsers = await service.view()
+    const allUsers = await service.view();
+    console.log(allUsers)
     return res.json(allUsers);
   }
 }
