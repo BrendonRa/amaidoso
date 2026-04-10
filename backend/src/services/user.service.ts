@@ -7,18 +7,14 @@ export class UserService {
     return { message: "Usuário criado", data };
   }
   async view() {
-    //const rows = await connection.execute('SELECT * FROM idoso');
-    //console.log(rows);
-    //return { message: "Todos os Idoso", rows }
-
-    const sql = 'SELECT * FROM usuarios';
-
-    connection.query(sql, (err, results) => {
+    const sql = 'SELECT * FROM idoso';
+    const [rows] = connection.query(sql, (err, results) => {
       if (err) {
-        //results = { erro: 'Erro no banco' };
-      } 
-
+        return { erro: 'Erro no bansco' };
+      }
+      //console.log(results)
       return results; // Retorna os dados em JSON
-    })
+    });
+    return 
   }
 }
