@@ -8,13 +8,7 @@ export class UserService {
   }
   async view() {
     const sql = 'SELECT * FROM idoso';
-    const [rows] = connection.query(sql, (err, results) => {
-      if (err) {
-        return { erro: 'Erro no bansco' };
-      }
-      //console.log(results)
-      return results; // Retorna os dados em JSON
-    });
-    return 
+    const [rows] = await connection.query(sql);
+    return rows;
   }
 }

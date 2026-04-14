@@ -8,10 +8,10 @@ export const connection = mysql.createPool({
 })
 
 
-connection.getConnection((err) => {
-  if (err) {
+connection.getConnection()
+  .then(() => {
+    console.log('Conectado ao MySQL!');
+  })
+  .catch((err: any) => {
     console.error('Erro ao conectar:', err);
-    return;
-  }
-  console.log('Conectado ao MySQL!');
-});
+  });
