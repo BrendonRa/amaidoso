@@ -16,7 +16,14 @@ export class UserController {
   async view(req: Request, res: Response) {
     const service = new UserService();
     const allUsers = await service.view().then();
-    console.log(allUsers)
+    console.log(allUsers);
     return res.status(201).json(allUsers);
+  }
+  async select(req: Request, res: Response) {
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const service = new UserService();
+    const userSelecter = await service.select(id).then();
+    console.log(userSelecter);
+    return res.status(201).json(userSelecter)
   }
 }
