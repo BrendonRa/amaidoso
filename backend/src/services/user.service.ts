@@ -1,9 +1,9 @@
-import { connection } from "../config/db"
+import { connection } from "../config/db";
 
 export class UserService {
-  async create(data: any) {
-    const sql = 'INSERT INTO idoso (nome_idoso, dt_nasc, sexo) VALUES (?, ?, ?)';
-    connection.query(sql, [data.nome, data.dataNasc, data.sexo]);
+  async create(data: any, type: string) {
+    const sql = `INSERT INTO ${type} (${Object.keys(data).join(', ')}) VALUES (${Object.values(data).map(() => '?').join(', ')})`;
+    connection.query(sql, Object.values(data));
     return { message: "Usuário criado", data };
   }
   // Pega todas as informações de idosos do Banco de Dados
@@ -13,8 +13,8 @@ export class UserService {
     return rows;
   }
   // Seleciona apenas um idoso da tabela IDOSO
-  async select(id: String) {
-    const sql = 'SELECT * FROM idoso WHERE id_idoso = (?)';
+  async select(id: String, type: string) {
+    const sql = `SELECT * FROM ${type} WHERE id_${type} = (?)`;
     const [rows] = await connection.query(sql, [id]);
     return rows;
   }

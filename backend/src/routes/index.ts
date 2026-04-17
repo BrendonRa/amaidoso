@@ -1,7 +1,9 @@
 import express from "express";
-import userRoutes from "./user.routes";
+import idosoRoutes from "./idoso.routes";
+import responsavelRoutes from "./responsavel.routes";
 
 export const routes = (app: express.Express) => {
     app.use(express.json());
-    app.use(userRoutes);
+    app.use(idosoRoutes);
+    app.use(responsavelRoutes);
 };
