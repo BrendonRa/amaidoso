@@ -2,7 +2,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import React from 'react';
-import { router } from 'expo-router';
 import {
   KeyboardAvoidingView,
   Platform,
