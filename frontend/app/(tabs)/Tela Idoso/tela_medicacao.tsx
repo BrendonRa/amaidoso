@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { router } from 'expo-router';
 import {
   View,
   Text,
@@ -7,12 +8,9 @@ import {
   Image,
   SafeAreaView,
 } from "react-native";
+import IdosoBottomNav from './IdosoBottomNav';
 
-type Props = {
-  goToHome: () => void;
-};
-
-export default function ConfirmarMedicacoesScreen({ goToHome }: Props) {
+export default function ConfirmarMedicacoesScreen() {
   return (
     <SafeAreaView style={styles.container}>
       {/* HEADER */}
@@ -24,6 +22,13 @@ export default function ConfirmarMedicacoesScreen({ goToHome }: Props) {
           style={styles.avatar}
         />
       </View>
+
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => router.push('./tela_principal_idoso')}
+        style={styles.backButton}>
+        <Text style={styles.backButtonText}>Voltar</Text>
+      </TouchableOpacity>
 
       {/* LISTA */}
       <View style={styles.content}>
@@ -40,30 +45,7 @@ export default function ConfirmarMedicacoesScreen({ goToHome }: Props) {
           confirmação!!!
         </Text>
       </View>
-
-      {/* BARRA INFERIOR */}
-      <View style={styles.footer}>
-        <TouchableOpacity onPress={() => console.log("Mudanças")}>
-          <Image
-            source={require("../../../assets/images/mudancas.png")}
-            style={styles.iconImg}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={goToHome} style={styles.homeButton}>
-          <Image
-            source={require("../../../assets/images/home.png")}
-            style={styles.iconImg}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => console.log("Configurações")}>
-          <Image
-            source={require("../../../assets/images/config.png")}
-            style={styles.iconImg}
-          />
-        </TouchableOpacity>
-      </View>
+      <IdosoBottomNav activeTab="home" />
     </SafeAreaView>
   );
 }
@@ -115,11 +97,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f2f2f2",
   },
+  backButton: {
+    alignSelf: 'flex-start',
+    marginHorizontal: 20,
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    backgroundColor: '#FFE4CC',
+  },
+  backButtonText: {
+    color: '#F58220',
+    fontSize: 14,
+    fontWeight: '700',
+  },
 
   /* HEADER */
   header: {
     backgroundColor: "#f58220",
     padding: 16,
+    paddingTop: 52,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -201,26 +198,4 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  /* FOOTER */
-  footer: {
-    marginTop: "auto",
-    height: 80,
-    backgroundColor: "#fff",
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: "#ddd",
-  },
-
-  iconImg: {
-    width: 28,
-    height: 28,
-  },
-
-  homeButton: {
-    backgroundColor: "#f4a261",
-    padding: 10,
-    borderRadius: 20,
-  },
 });

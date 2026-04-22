@@ -1,109 +1,110 @@
-import React from 'react';
-import { router } from 'expo-router';
-import {View, Image, TouchableOpacity, StyleSheet, Text, TextInput, } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
+import { router } from 'expo-router';
+import React from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function Tela_Login_Idoso(){
-  const [text, onChangeText] = React.useState('Useless Text');
-  const [number, onChangeNumber] = React.useState('');
+export default function TelaLoginIdoso() {
+  const [cpf, setCpf] = React.useState('');
+  const [senha, setSenha] = React.useState('');
 
-    return(
-        <View style={styles.container}>
-            <TouchableOpacity
-                onPress={() => router.replace('/(tabs)/Tela Idoso/tela_inicio2')}
-                style={styles.backButton}>
-                <Text style={styles.backButtonText}>Voltar</Text>
-            </TouchableOpacity>
-            <Image source={require('../../../assets/images/logo.jpeg')} style={styles.logo}/>
-            <Text style={styles.title}>Entre Agora</Text>
-            <Text style={styles.subtitle}>Por favor entre na sua conta para</Text>
-            <Text style={styles.subtitle}>continuar usando nosso app</Text>
-          <SafeAreaProvider>
-             <SafeAreaView>
+  const handleCpfChange = (value: string) => {
+    const numericValue = value.replace(/\D/g, '');
+    setCpf(numericValue);
+  };
+
+  const handleEntrar = () => {
+    router.push('./tela_tutorial_idoso');
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.keyboardView}>
+        <View style={styles.content}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.back()}
+            style={styles.backButton}>
+            <Text style={styles.backButtonText}>Voltar</Text>
+          </TouchableOpacity>
+
+          <Image
+            source={require('../../../assets/images/logo.jpeg')}
+            style={styles.logo}
+            contentFit="contain"
+          />
+
+          <Text style={styles.title}>Entre Agora</Text>
+          <Text style={styles.subtitle}>
+            Por favor entre na sua conta para{'\n'}continuar usando nosso app
+          </Text>
+
+          <View style={styles.form}>
             <TextInput
-             onChangeText={onChangeNumber}
-          value={number}
-          placeholder="CPF"
-          keyboardType="numeric"
-          style={styles.input} ></TextInput>
-              
-              <TextInput
-             onChangeText={onChangeText}
-            value={text}
-            placeholder="Senha"
-            keyboardType="numeric"
-            style={styles.input} />
-            <TouchableOpacity style={styles.button2}>
+              keyboardType="number-pad"
+              maxLength={11}
+              onChangeText={handleCpfChange}
+              placeholder="CPF"
+              placeholderTextColor="#737373"
+              style={styles.input}
+              value={cpf}
+            />
+
+            <TextInput
+              onChangeText={setSenha}
+              placeholder="Senha"
+              placeholderTextColor="#737373"
+              secureTextEntry
+              style={styles.input}
+              value={senha}
+            />
+
+            <TouchableOpacity activeOpacity={0.6} onPress={handleEntrar} style={styles.buttonWrapper}>
+              <LinearGradient
+                colors={['#FFB06A', '#FF9230']}
+                end={{ x: 1, y: 0.5 }}
+                start={{ x: 0, y: 0.5 }}
+                style={styles.button}>
                 <Text style={styles.buttonText}>Entrar</Text>
+              </LinearGradient>
             </TouchableOpacity>
-            </SafeAreaView>
-            </SafeAreaProvider>
+          </View>
         </View>
-    );
-
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
 }
-const styles =  StyleSheet.create({
 
-    container:{
+const styles = StyleSheet.create({
+  safeArea: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    backgroundColor: '#fff',
-  },
-  logo:{
-    width:120,
-    height:120,
-    marginBottom:30,
-    marginTop: 100,
-  },
-  title:{
-    fontSize:20,
-    fontWeight:'bold',
-    color: '#FF9230',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 10,
-    color: 'black',
-    marginBottom: 0,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-
-  input: {
-    paddingVertical: 15,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-    width: 250,
-    alignItems: 'center',
-    marginTop: 20 ,
-    borderWidth: 1,
-  },
-
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  button2: {
-    display:'flex',
-    paddingVertical: 15,
-    paddingHorizontal: 60,
-    borderRadius: 200,
-    width: 100,
-    alignItems: 'center',
-    marginTop: 80,
-    backgroundColor: '#FF9230',
-    marginLeft: 'auto',
-    marginRight: 'auto',
+    paddingHorizontal: 32,
+    backgroundColor: '#FFFFFF',
   },
   backButton: {
     position: 'absolute',
-    top: 60,
-    left: 24,
+    top: 40,
+    left: 28,
     zIndex: 1,
     paddingVertical: 8,
     paddingHorizontal: 14,
@@ -111,9 +112,64 @@ const styles =  StyleSheet.create({
     backgroundColor: '#FFE4CC',
   },
   backButtonText: {
-    color: '#FF9230',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    color: '#FF9230',
   },
-
+  logo: {
+    width: 108,
+    height: 108,
+    marginBottom: 22,
+  },
+  title: {
+    fontSize: 29,
+    lineHeight: 34,
+    fontWeight: '700',
+    color: '#F58220',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: '#2E2E2E',
+    textAlign: 'center',
+    marginBottom: 42,
+  },
+  form: {
+    width: '100%',
+    maxWidth: 320,
+  },
+  input: {
+    height: 56,
+    borderWidth: 1,
+    borderColor: '#A8A8A8',
+    borderRadius: 17,
+    paddingHorizontal: 18,
+    fontSize: 15,
+    color: '#151515',
+    backgroundColor: '#FFFFFF',
+    marginBottom: 14,
+  },
+  buttonWrapper: {
+    alignItems: 'center',
+    marginTop: 42,
+  },
+  button: {
+    minWidth: 118,
+    paddingVertical: 14,
+    paddingHorizontal: 26,
+    borderRadius: 999,
+    alignItems: 'center',
+    shadowColor: '#F58220',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  buttonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
 });
