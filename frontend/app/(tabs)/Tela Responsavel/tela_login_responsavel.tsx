@@ -4,7 +4,9 @@ import { router } from 'expo-router';
 import React from 'react';
 import {
   KeyboardAvoidingView,
+  Modal,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -16,6 +18,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function HomeScreen() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [showSuccessModal, setShowSuccessModal] = React.useState(false);
+
+  const handleLogin = () => {
+    setShowSuccessModal(true);
+  };
+
+  const handleContinue = () => {
+    setShowSuccessModal(false);
+    router.push('./tela_home_responsavel');
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -69,7 +81,7 @@ export default function HomeScreen() {
 
             <TouchableOpacity
               activeOpacity={0.6}
-              onPress={() => router.push('./tela_home_responsavel')}
+              onPress={handleLogin}
               style={styles.buttonWrapper}>
               <LinearGradient
                 colors={['#2E6BFF', '#0047FF']}
@@ -92,6 +104,32 @@ export default function HomeScreen() {
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={showSuccessModal}
+        onRequestClose={() => setShowSuccessModal(false)}>
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowSuccessModal(false)} />
+          <View style={styles.modalCard}>
+            <View style={styles.modalIconWrap}>
+              <Text style={styles.modalIcon}>✓</Text>
+            </View>
+            <Text style={styles.modalTitle}>Login realizado com sucesso</Text>
+            <Text style={styles.modalText}>
+              Seu acesso foi confirmado. Clique em continuar para entrar no app.
+            </Text>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={handleContinue}
+              style={styles.modalButton}>
+              <Text style={styles.modalButtonText}>Continuar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
 
     
@@ -206,5 +244,72 @@ const styles = StyleSheet.create({
   signupHighlight: {
     fontWeight: '700',
     color: '#111111',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    backgroundColor: 'rgba(0, 0, 0, 0.28)',
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 22,
+    paddingTop: 24,
+    paddingBottom: 20,
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 8,
+  },
+  modalIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 999,
+    backgroundColor: '#DCE7FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  modalIcon: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#0C4DFF',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#161616',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  modalText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#4B4B4B',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalButton: {
+    minWidth: 150,
+    minHeight: 46,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0C4DFF',
+    paddingHorizontal: 18,
+  },
+  modalButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

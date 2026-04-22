@@ -1,10 +1,13 @@
 import { router } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
 import React from 'react';
 import {
   KeyboardAvoidingView,
+  Modal,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -17,6 +20,16 @@ export default function TelaCadastroResponsavel() {
   const [username, setUsername] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [showSuccessModal, setShowSuccessModal] = React.useState(false);
+
+  const handleCreateAccount = () => {
+    setShowSuccessModal(true);
+  };
+
+  const handleGoToLogin = () => {
+    setShowSuccessModal(false);
+    router.replace('./tela_login_responsavel');
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -70,7 +83,10 @@ export default function TelaCadastroResponsavel() {
               value={password}
             />
 
-            <TouchableOpacity activeOpacity={0.6} onPress={() => {}} style={styles.buttonWrapper}>
+            <TouchableOpacity
+              activeOpacity={0.6}
+              onPress={handleCreateAccount}
+              style={styles.buttonWrapper}>
               <LinearGradient
                 colors={['#2E6BFF', '#0047FF']}
                 end={{ x: 1, y: 0.5 }}
@@ -92,6 +108,33 @@ export default function TelaCadastroResponsavel() {
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={showSuccessModal}
+        onRequestClose={() => setShowSuccessModal(false)}>
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowSuccessModal(false)} />
+          <View style={styles.modalCard}>
+            <View style={styles.modalIconWrap}>
+              <Feather name="check" size={24} color="#0C4DFF" />
+            </View>
+            <Text style={styles.modalTitle}>Cadastro realizado</Text>
+            <Text style={styles.modalText}>
+              Sua conta foi criada com sucesso. Clique em OK para ir ate a tela de login e entrar
+              com o novo cadastro.
+            </Text>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={handleGoToLogin}
+              style={styles.modalButton}>
+              <Text style={styles.modalButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -195,5 +238,67 @@ const styles = StyleSheet.create({
   signupHighlight: {
     fontWeight: '700',
     color: '#111111',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    backgroundColor: 'rgba(0, 0, 0, 0.28)',
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 22,
+    paddingTop: 24,
+    paddingBottom: 20,
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 8,
+  },
+  modalIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 999,
+    backgroundColor: '#DCE7FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#161616',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  modalText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#4B4B4B',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalButton: {
+    minWidth: 140,
+    minHeight: 46,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0C4DFF',
+    paddingHorizontal: 18,
+  },
+  modalButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

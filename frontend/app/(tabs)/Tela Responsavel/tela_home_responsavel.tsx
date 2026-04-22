@@ -1,20 +1,28 @@
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import { useResponsavelProfile } from '@/contexts/responsavel-profile-context';
 
 export default function TelaHomeResponsavel() {
+  const { profile } = useResponsavelProfile();
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.greeting}>Olá, Fulano</Text>
+          <Text style={styles.greeting}>Olá, {profile.nome.split(' ')[0] || 'Fulano'}</Text>
 
           <TouchableOpacity
             activeOpacity={0.6}
             onPress={() => router.push('./tela_editar_perfil_responsavel')}
             style={styles.avatar}>
-            <Ionicons name="person" size={18} color="#1F1F1F" />
+            {profile.photoUri ? (
+              <Image source={{ uri: profile.photoUri }} style={styles.avatarImage} />
+            ) : (
+              <Ionicons name="person" size={18} color="#1F1F1F" />
+            )}
           </TouchableOpacity>
         </View>
 
@@ -82,6 +90,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.08)',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   content: {
     flex: 1,

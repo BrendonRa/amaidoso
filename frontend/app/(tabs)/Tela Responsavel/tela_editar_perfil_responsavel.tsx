@@ -1,9 +1,13 @@
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import { useResponsavelProfile } from '@/contexts/responsavel-profile-context';
 
 export default function TelaEditarPerfilResponsavel() {
+  const { profile } = useResponsavelProfile();
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -17,35 +21,39 @@ export default function TelaEditarPerfilResponsavel() {
           </TouchableOpacity>
 
           <View style={styles.avatar}>
-            <Ionicons name="person-outline" size={72} color="#5A429B" />
+            {profile.photoUri ? (
+              <Image source={{ uri: profile.photoUri }} style={styles.avatarImage} />
+            ) : (
+              <Ionicons name="person-outline" size={72} color="#5A429B" />
+            )}
           </View>
 
-          <Text style={styles.profileName}>Fulano da Silva</Text>
+          <Text style={styles.profileName}>{profile.nome || 'Sem nome'}</Text>
 
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Nome Completo</Text>
-              <Text style={styles.infoValue}>Fulano da Silva</Text>
+              <Text style={styles.infoValue}>{profile.nome || '--'}</Text>
             </View>
 
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Nome de Usuário</Text>
-              <Text style={styles.infoValue}>Fulano da Silva</Text>
+              <Text style={styles.infoValue}>{profile.usuario || '--'}</Text>
             </View>
 
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Data de nascimento</Text>
-              <Text style={styles.infoValue}>--/--/--</Text>
+              <Text style={styles.infoValue}>{profile.nascimento || '--/--/----'}</Text>
             </View>
 
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>email</Text>
-              <Text style={styles.infoValue}>fulanosilva2002@gmail.com</Text>
+              <Text style={styles.infoValue}>{profile.email || '--'}</Text>
             </View>
 
             <View style={[styles.infoRow, styles.lastInfoRow]}>
               <Text style={styles.infoLabel}>Senha</Text>
-              <Text style={styles.infoValue}>A1234678!</Text>
+              <Text style={styles.infoValue}>{profile.senha || '--'}</Text>
             </View>
 
             <TouchableOpacity
@@ -79,7 +87,9 @@ export default function TelaEditarPerfilResponsavel() {
             activeOpacity={0.6}
             onPress={() => router.push('./tela_config_responsavel')}
             style={styles.navItem}>
-            <Feather name="settings" size={24} color="#121212" />
+            <View style={styles.activePill}>
+              <Feather name="settings" size={24} color="#121212" />
+            </View>
             <Text style={styles.navLabel}>Configurações</Text>
           </TouchableOpacity>
         </View>
@@ -130,6 +140,12 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginTop: 4,
     marginBottom: 14,
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   profileName: {
     fontSize: 18,
@@ -201,5 +217,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 12,
     color: '#1A1A1A',
+  },
+  activePill: {
+    width: 52,
+    height: 30,
+    borderRadius: 999,
+    backgroundColor: '#9AB8FF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
