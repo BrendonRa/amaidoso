@@ -1,6 +1,6 @@
+import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
 import React from 'react';
 import {
   KeyboardAvoidingView,
@@ -13,7 +13,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function HomeScreen() {
+export default function TelaCadastroResponsavel() {
+  const [username, setUsername] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
 
@@ -23,18 +24,33 @@ export default function HomeScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}>
         <View style={styles.content}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.back()}
+            style={styles.backButton}>
+            <Text style={styles.backButtonText}>Voltar</Text>
+          </TouchableOpacity>
           <Image
-            source={require('../../assets/images/logo.jpeg')}
+            source={require('../../../assets/images/logo.jpeg')}
             style={styles.logo}
             contentFit="contain"
           />
 
-          <Text style={styles.title}>Entre Agora</Text>
+          <Text style={styles.title}>Crie Agora</Text>
           <Text style={styles.subtitle}>
-            Por favor entre na sua conta para{'\n'}continuar usando nosso app
+            Preencha os campos com suas{'\n'}informações
           </Text>
 
           <View style={styles.form}>
+            <TextInput
+              autoCapitalize="words"
+              onChangeText={setUsername}
+              placeholder="Nome de Usuário"
+              placeholderTextColor="#737373"
+              style={styles.input}
+              value={username}
+            />
+
             <TextInput
               autoCapitalize="none"
               keyboardType="email-address"
@@ -54,41 +70,29 @@ export default function HomeScreen() {
               value={password}
             />
 
-            <TouchableOpacity
-              activeOpacity={0.6}
-              onPress={() => router.push('/tela_recuperar_senha_responsavel')}
-              style={styles.forgotPasswordWrapper}>
-              <Text style={styles.forgotPasswordText}>Recuperar senha</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.6}
-              onPress={() => router.push('/tela_home_responsavel')}
-              style={styles.buttonWrapper}>
+            <TouchableOpacity activeOpacity={0.6} onPress={() => {}} style={styles.buttonWrapper}>
               <LinearGradient
                 colors={['#2E6BFF', '#0047FF']}
                 end={{ x: 1, y: 0.5 }}
                 start={{ x: 0, y: 0.5 }}
                 style={styles.button}>
-                <Text style={styles.buttonText}>Entrar</Text>
+                <Text style={styles.buttonText}>Criar Conta</Text>
               </LinearGradient>
             </TouchableOpacity>
 
             <View style={styles.signupRow}>
-              <Text style={styles.signupText}>Não possui uma conta?</Text>
+              <Text style={styles.signupText}>Possui uma conta?</Text>
               <TouchableOpacity
                 activeOpacity={0.6}
-                onPress={() => router.push('/tela_cadastro_responsavel')}
+                onPress={() => router.push('./tela_login_responsavel')}
                 style={styles.signupLinkWrapper}>
-                <Text style={styles.signupHighlight}>Cria uma agora</Text>
+                <Text style={styles.signupHighlight}>Entre agora</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
-
-    
   );
 }
 
@@ -106,6 +110,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 28,
     backgroundColor: '#FFFFFF',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 40,
+    left: 28,
+    zIndex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    backgroundColor: '#DCE7FF',
+  },
+  backButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0C4DFF',
   },
   logo: {
     width: 118,
@@ -142,18 +161,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     marginBottom: 16,
   },
-  forgotPasswordWrapper: {
-    alignSelf: 'flex-end',
-    marginTop: -4,
-    marginBottom: 42,
-  },
-  forgotPasswordText: {
-    fontSize: 11,
-    color: '#3C3C3C',
-    textDecorationLine: 'underline',
-  },
   buttonWrapper: {
     alignItems: 'center',
+    marginTop: 26,
     marginBottom: 18,
   },
   button: {

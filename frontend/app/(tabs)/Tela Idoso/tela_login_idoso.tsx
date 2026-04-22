@@ -1,4 +1,5 @@
 import React from 'react';
+import { router } from 'expo-router';
 import {View, Image, TouchableOpacity, StyleSheet, Text, TextInput, } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
@@ -9,7 +10,12 @@ export default function Tela_Login_Idoso(){
 
     return(
         <View style={styles.container}>
-            <Image source={require('../../assets/images/logo.jpeg')} style={styles.logo}/>
+            <TouchableOpacity
+                onPress={() => router.replace('/(tabs)/Tela Idoso/tela_inicio2')}
+                style={styles.backButton}>
+                <Text style={styles.backButtonText}>Voltar</Text>
+            </TouchableOpacity>
+            <Image source={require('../../../assets/images/logo.jpeg')} style={styles.logo}/>
             <Text style={styles.title}>Entre Agora</Text>
             <Text style={styles.subtitle}>Por favor entre na sua conta para</Text>
             <Text style={styles.subtitle}>continuar usando nosso app</Text>
@@ -94,6 +100,20 @@ const styles =  StyleSheet.create({
     marginLeft: 'auto',
     marginRight: 'auto',
   },
-
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 24,
+    zIndex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    backgroundColor: '#FFE4CC',
+  },
+  backButtonText: {
+    color: '#FF9230',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
 
 });

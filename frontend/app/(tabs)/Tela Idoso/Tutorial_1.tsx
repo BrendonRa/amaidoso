@@ -62,7 +62,7 @@ export default function TutorialScreen({ goToHome }: Props) {
               marginBottom: 25,
             }}
           >
-            Acima está suas informações, para ver e analisa-las, clique no seu icone de perfil 
+            Parece que essa é a sua primeira vez aqui, deseja realizar o tutorial?
           </Text>
 
           <View
@@ -73,7 +73,7 @@ export default function TutorialScreen({ goToHome }: Props) {
             }}
           >
             <TouchableOpacity onPress={goToHome}>
-              <Text>Ir Agora</Text>
+              <Text>Não, obrigado</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -92,7 +92,7 @@ export default function TutorialScreen({ goToHome }: Props) {
                   fontWeight: "bold",
                 }}
               >
-                Depois
+                Sim
               </Text>
             </TouchableOpacity>
           </View>
@@ -114,7 +114,7 @@ export default function TutorialScreen({ goToHome }: Props) {
         {/* BOTÃO 1 */}
         <TouchableOpacity onPress={() => console.log("Mudanças")}>
           <Image
-            source={require("../../assets/images/mudancas.png")}
+            source={require("../../../assets/images/mudancas.png")}
             style={{ width: 28, height: 28 }}
           />
         </TouchableOpacity>
@@ -122,7 +122,7 @@ export default function TutorialScreen({ goToHome }: Props) {
         {/* BOTÃO 2 */}
         <TouchableOpacity onPress={goToHome}>
           <Image
-            source={require("../../assets/images/home.png")}
+            source={require("../../../assets/images/home.png")}
             style={{ width: 28, height: 28 }}
           />
         </TouchableOpacity>
@@ -130,7 +130,7 @@ export default function TutorialScreen({ goToHome }: Props) {
         {/* BOTÃO 3 */}
         <TouchableOpacity onPress={() => console.log("Configurações")}>
           <Image
-            source={require("../../assets/images/config.png")}
+            source={require("../../../assets/images/config.png")}
             style={{ width: 28, height: 28 }}
           />
         </TouchableOpacity>

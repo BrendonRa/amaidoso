@@ -7,7 +7,7 @@ export default function TelaInicio() {
     <View style={styles.container}>
 
       <Image
-        source={require('../../assets/images/logo.jpeg')}
+        source={require('../../../assets/images/logo.jpeg')}
         style={styles.logo}
       />
 
@@ -17,7 +17,7 @@ export default function TelaInicio() {
         Crie uma conta e comece a usar
       </Text>
 
-      <TouchableOpacity onPress={() => router.push('/tela_inicio2')}>
+      <TouchableOpacity onPress={() => router.push('./tela_inicio2')}>
         <LinearGradient
           colors={['#1456FF', '#003DD6']}
           style={styles.button}

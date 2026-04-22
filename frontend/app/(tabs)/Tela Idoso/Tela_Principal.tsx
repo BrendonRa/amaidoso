@@ -12,57 +12,54 @@ type Props = {
   goToHome: () => void;
 };
 
-export default function LembretesScreen({ goToHome }: Props) {
+export default function HomeScreen({ goToHome }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.greeting}>Olá, Oswaldo Teixeira</Text>
 
-        <Image
-          source={{ uri: "https://wallpapers.com/images/hd/funny-old-man-pictures-29zq8pp6pi1gcap8.jpg" }}
-          style={styles.avatar}
-        />
+        <View style={styles.headerRight}>
+          <TouchableOpacity>
+            <Text style={{ fontSize: 18 }}>↗</Text>
+          </TouchableOpacity>
+
+          <Image
+            source={{ uri: "https://wallpapers.com/images/hd/funny-old-man-pictures-29zq8pp6pi1gcap8.jpg" }}
+            style={styles.avatar}
+          />
+        </View>
       </View>
 
-      {/* LISTA */}
+      {/* CARDS */}
       <View style={styles.content}>
-        <Reminder text="Voce tem consulta às 16:00" />
-        <Reminder text="Aniversario da Florinda 22/10" />
-        <Reminder text="Ir no mercado comprar Tadalafila às 14h" />
-        <Reminder text="Voce tem consulta às 16:00" />
+        <Card title="Lembretes" />
+        <Card title="Confirmar Medicações" />
+        <Card title="Anotações" />
       </View>
 
-      {/* AVISO */}
-      <View style={styles.warningBox}>
-        <Text style={styles.warningText}>
-          Todos os lembretes serão excluídos automaticamente após 30 min do seu
-          Prazo final!!!
-        </Text>
-      </View>
-
-      {/* BARRA INFERIOR */}
+      {/* 🔻 BARRA INFERIOR (SEUS ÍCONES) */}
       <View style={styles.footer}>
-      
+        {/* BOTÃO 1 */}
         <TouchableOpacity onPress={() => console.log("Mudanças")}>
           <Image
-            source={require("../../assets/images/mudancas.png")}
+            source={require("../../../assets/images/mudancas.png")}
             style={styles.icon}
           />
         </TouchableOpacity>
 
-        
-        <TouchableOpacity  style={styles.homeButton}>
+        {/* BOTÃO 2 */}
+        <TouchableOpacity onPress={goToHome} style={styles.homeButton}>
           <Image
-            source={require("../../assets/images/home.png")}
+            source={require("../../../assets/images/home.png")}
             style={styles.icon}
           />
         </TouchableOpacity>
 
-        
+        {/* BOTÃO 3 */}
         <TouchableOpacity onPress={() => console.log("Configurações")}>
           <Image
-            source={require("../../assets/images/config.png")}
+            source={require("../../../assets/images/config.png")}
             style={styles.icon}
           />
         </TouchableOpacity>
@@ -71,20 +68,20 @@ export default function LembretesScreen({ goToHome }: Props) {
   );
 }
 
-/* ITEM DE LEMBRETE */
-function Reminder({ text }: { text: string }) {
+/* COMPONENTE CARD */
+function Card({ title }: { title: string }) {
   return (
-    <View style={styles.reminder}>
-      <Text style={styles.reminderText}>{text}</Text>
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>{title}</Text>
 
-      <TouchableOpacity>
-        <Text style={{ fontSize: 16 }}>🗑️</Text>
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>Entrar</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
-
+/* STYLES */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -106,6 +103,12 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
   avatar: {
     width: 40,
     height: 40,
@@ -114,17 +117,17 @@ const styles = StyleSheet.create({
 
   /* CONTENT */
   content: {
+    flex: 1,
     padding: 20,
-    gap: 15,
+    justifyContent: "center",
+    gap: 20,
   },
 
-  /* REMINDER */
-  reminder: {
+  /* CARD */
+  card: {
     backgroundColor: "#e6e6e6",
     borderRadius: 15,
-    padding: 15,
-    flexDirection: "row",
-    justifyContent: "space-between",
+    padding: 20,
     alignItems: "center",
 
     shadowColor: "#000",
@@ -134,30 +137,26 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
 
-  reminderText: {
-    fontSize: 14,
-    flex: 1,
-    marginRight: 10,
+  cardTitle: {
+    fontSize: 16,
+    marginBottom: 10,
+    fontWeight: "500",
   },
 
-  /* ALERTA */
-  warningBox: {
-    margin: 20,
-    backgroundColor: "#ddd",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
+  button: {
+    backgroundColor: "#f58220",
+    paddingVertical: 6,
+    paddingHorizontal: 20,
+    borderRadius: 20,
   },
 
-  warningText: {
-    color: "red",
-    fontSize: 12,
-    textAlign: "center",
+  buttonText: {
+    color: "#fff",
+    fontWeight: "600",
   },
 
-  /* Estilo parte de baixo */
+  /* FOOTER */
   footer: {
-    marginTop: "auto",
     height: 80,
     backgroundColor: "#fff",
     flexDirection: "row",

@@ -45,21 +45,21 @@ export default function ConfirmarMedicacoesScreen({ goToHome }: Props) {
       <View style={styles.footer}>
         <TouchableOpacity onPress={() => console.log("Mudanças")}>
           <Image
-            source={require("../../assets/images/mudancas.png")}
+            source={require("../../../assets/images/mudancas.png")}
             style={styles.iconImg}
           />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={goToHome} style={styles.homeButton}>
           <Image
-            source={require("../../assets/images/home.png")}
+            source={require("../../../assets/images/home.png")}
             style={styles.iconImg}
           />
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => console.log("Configurações")}>
           <Image
-            source={require("../../assets/images/config.png")}
+            source={require("../../../assets/images/config.png")}
             style={styles.iconImg}
           />
         </TouchableOpacity>

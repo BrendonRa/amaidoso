@@ -1,10 +1,20 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
-import { SafeAreaView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, Pressable, SafeAreaView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
 export default function TelaConfigResponsavel() {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
+  const [showLogoutModal, setShowLogoutModal] = React.useState(false);
+
+  const handleLogout = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleConfirmLogout = () => {
+    setShowLogoutModal(false);
+    router.push('../Tela Idoso/tela_inicio1');
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -14,7 +24,7 @@ export default function TelaConfigResponsavel() {
         <View style={styles.list}>
           <TouchableOpacity
             activeOpacity={0.6}
-            onPress={() => router.push('/tela_editar_perfil_responsavel')}
+            onPress={() => router.push('./tela_editar_perfil_responsavel')}
             style={styles.itemCard}>
             <Text style={styles.itemLabel}>Editar Perfil</Text>
             <Feather name="user" size={20} color="#202020" />
@@ -48,7 +58,7 @@ export default function TelaConfigResponsavel() {
 
           <TouchableOpacity
             activeOpacity={0.6}
-            onPress={() => router.push('/tela_inicio1')}
+            onPress={handleLogout}
             style={styles.logoutButton}>
             <Text style={styles.logoutText}>Sair</Text>
             <Feather name="log-out" size={22} color="#202020" />
@@ -58,7 +68,7 @@ export default function TelaConfigResponsavel() {
         <View style={styles.bottomBar}>
           <TouchableOpacity
             activeOpacity={0.6}
-            onPress={() => router.push('/tela_painel_responsavel')}
+            onPress={() => router.push('./tela_painel_responsavel')}
             style={styles.navItem}>
             <Feather name="edit-3" size={24} color="#121212" />
             <Text style={styles.navLabel}>Painel</Text>
@@ -66,7 +76,7 @@ export default function TelaConfigResponsavel() {
 
           <TouchableOpacity
             activeOpacity={0.6}
-            onPress={() => router.push('/tela_home_responsavel')}
+            onPress={() => router.push('./tela_home_responsavel')}
             style={styles.navItem}>
             <Ionicons name="home-outline" size={26} color="#121212" />
             <Text style={styles.navLabel}>Home</Text>
@@ -80,6 +90,41 @@ export default function TelaConfigResponsavel() {
           </TouchableOpacity>
         </View>
       </View>
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={showLogoutModal}
+        onRequestClose={() => setShowLogoutModal(false)}>
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowLogoutModal(false)} />
+          <View style={styles.modalCard}>
+            <View style={styles.modalIconWrap}>
+              <Feather name="log-out" size={24} color="#A43232" />
+            </View>
+            <Text style={styles.modalTitle}>Deseja sair da conta?</Text>
+            <Text style={styles.modalText}>
+              Ao continuar, voce voltara para a tela de inicio.
+            </Text>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setShowLogoutModal(false)}
+                style={styles.modalSecondaryButton}>
+                <Text style={styles.modalSecondaryText}>Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={handleConfirmLogout}
+                style={styles.modalPrimaryButton}>
+                <Text style={styles.modalPrimaryText}>Sair</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -171,5 +216,86 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 12,
     color: '#1A1A1A',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    backgroundColor: 'rgba(0, 0, 0, 0.28)',
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 22,
+    paddingTop: 24,
+    paddingBottom: 18,
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 8,
+  },
+  modalIconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 999,
+    backgroundColor: '#FFD9D9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#161616',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  modalText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#4B4B4B',
+    textAlign: 'center',
+    marginBottom: 22,
+  },
+  modalActions: {
+    width: '100%',
+    flexDirection: 'row',
+    gap: 10,
+  },
+  modalSecondaryButton: {
+    flex: 1,
+    minHeight: 46,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#D8D8D8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  modalSecondaryText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#333333',
+  },
+  modalPrimaryButton: {
+    flex: 1,
+    minHeight: 46,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E26D6D',
+  },
+  modalPrimaryText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

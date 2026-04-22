@@ -5,13 +5,14 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Image,
+  Alert,
 } from "react-native";
 
 type Props = {
-  goToTutorial: () => void;
+  goToHome: () => void;
 };
 
-export default function HomeScreen({ goToTutorial }: Props) {
+export default function TutorialScreen({ goToHome }: Props) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f2f2f2" }}>
 
@@ -20,7 +21,7 @@ export default function HomeScreen({ goToTutorial }: Props) {
         <View
           style={{
             height: 100,
-            backgroundColor: "#FF9230",
+            backgroundColor: "#F4A261",
             justifyContent: "center",
             paddingHorizontal: 20,
           }}
@@ -58,30 +59,43 @@ export default function HomeScreen({ goToTutorial }: Props) {
             style={{
               fontSize: 16,
               textAlign: "center",
-              marginBottom: 20,
+              marginBottom: 25,
             }}
           >
-            Bem vindo ao Amaidoso
+            Acima está suas informações, para ver e analisa-las, clique no seu icone de perfil 
           </Text>
 
-          <TouchableOpacity
-            onPress={goToTutorial}
+          <View
             style={{
-              backgroundColor: "#FF9230",
-              paddingVertical: 14,
-              borderRadius: 25,
+              flexDirection: "row",
+              justifyContent: "space-between",
               alignItems: "center",
             }}
           >
-            <Text
+            <TouchableOpacity onPress={goToHome}>
+              <Text>Ir Agora</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => Alert.alert("Tutorial", "Iniciar tutorial")}
               style={{
-                color: "#fff",
-                fontWeight: "bold",
+                backgroundColor: "#FF9230",
+                paddingVertical: 14,
+                paddingHorizontal: 25,
+                borderRadius: 25,
+                alignItems: "center",
               }}
             >
-              Avançar
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={{
+                  color: "#fff",
+                  fontWeight: "bold",
+                }}
+              >
+                Depois
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -100,15 +114,15 @@ export default function HomeScreen({ goToTutorial }: Props) {
         {/* BOTÃO 1 */}
         <TouchableOpacity onPress={() => console.log("Mudanças")}>
           <Image
-            source={require("../../assets/images/mudancas.png")}
+            source={require("../../../assets/images/mudancas.png")}
             style={{ width: 28, height: 28 }}
           />
         </TouchableOpacity>
 
         {/* BOTÃO 2 */}
-        <TouchableOpacity onPress={() => console.log("Home")}>
+        <TouchableOpacity onPress={goToHome}>
           <Image
-            source={require("../../assets/images/home.png")}
+            source={require("../../../assets/images/home.png")}
             style={{ width: 28, height: 28 }}
           />
         </TouchableOpacity>
@@ -116,7 +130,7 @@ export default function HomeScreen({ goToTutorial }: Props) {
         {/* BOTÃO 3 */}
         <TouchableOpacity onPress={() => console.log("Configurações")}>
           <Image
-            source={require("../../assets/images/config.png")}
+            source={require("../../../assets/images/config.png")}
             style={{ width: 28, height: 28 }}
           />
         </TouchableOpacity>

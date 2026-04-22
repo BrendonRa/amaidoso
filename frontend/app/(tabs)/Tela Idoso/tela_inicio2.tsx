@@ -5,11 +5,11 @@ import { router } from 'expo-router';
 export default function Tela_inicio2(){
 return(
     <View style={styles.container}>
-        <Image source={require('../../assets/images/logo.jpeg')}style={styles.logo}/>
+        <Image source={require('../../../assets/images/logo.jpeg')}style={styles.logo}/>
         <Text style={styles.title}>Bem Vindo ao Amaidoso</Text>
         <Text style={styles.subtitle}>Selecione uma opção abaixo:</Text>
 
-        <TouchableOpacity onPress={() => router.push('/tela_login_idoso')}>
+        <TouchableOpacity onPress={() => router.push('./tela_login_idoso')}>
            <LinearGradient
            colors={['#1456FF', '#003DD6']}
           style={styles.button}>
@@ -19,7 +19,7 @@ return(
 
 
 
-        <TouchableOpacity onPress={() => router.push('/tela_login_responsavel')}>
+        <TouchableOpacity onPress={() => router.push('../Tela Responsavel/tela_login_responsavel')}>
             <LinearGradient
             colors={['#1456FF', '#003DD6']}
             style={styles.button}>

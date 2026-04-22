@@ -13,10 +13,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function TelaCadastroResponsavel() {
-  const [username, setUsername] = React.useState('');
-  const [email, setEmail] = React.useState('');
-  const [password, setPassword] = React.useState('');
+export default function TelaRecuperarSenhaCodigoResponsavel() {
+  const [code, setCode] = React.useState('');
+
+  const handleCodeChange = (value: string) => {
+    const numericValue = value.replace(/\D/g, '');
+    setCode(numericValue);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -24,44 +27,34 @@ export default function TelaCadastroResponsavel() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}>
         <View style={styles.content}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.back()}
+            style={styles.backButton}>
+            <Text style={styles.backButtonText}>Voltar</Text>
+          </TouchableOpacity>
+
           <Image
-            source={require('../../assets/images/logo.jpeg')}
+            source={require('../../../assets/images/logo.jpeg')}
             style={styles.logo}
             contentFit="contain"
           />
 
-          <Text style={styles.title}>Crie Agora</Text>
+          <Text style={styles.title}>Digite o Codigo</Text>
           <Text style={styles.subtitle}>
-            Preencha os campos com suas{'\n'}informações
+            Insira abaixo o codigo enviado{'\n'}para o seu email para continuar{'\n'}com a redefinicao
+            da senha
           </Text>
 
           <View style={styles.form}>
             <TextInput
-              autoCapitalize="words"
-              onChangeText={setUsername}
-              placeholder="Nome de Usuário"
+              keyboardType="number-pad"
+              maxLength={6}
+              onChangeText={handleCodeChange}
+              placeholder="Codigo"
               placeholderTextColor="#737373"
               style={styles.input}
-              value={username}
-            />
-
-            <TextInput
-              autoCapitalize="none"
-              keyboardType="email-address"
-              onChangeText={setEmail}
-              placeholder="Email"
-              placeholderTextColor="#737373"
-              style={styles.input}
-              value={email}
-            />
-
-            <TextInput
-              onChangeText={setPassword}
-              placeholder="Senha"
-              placeholderTextColor="#737373"
-              secureTextEntry
-              style={styles.input}
-              value={password}
+              value={code}
             />
 
             <TouchableOpacity activeOpacity={0.6} onPress={() => {}} style={styles.buttonWrapper}>
@@ -70,17 +63,17 @@ export default function TelaCadastroResponsavel() {
                 end={{ x: 1, y: 0.5 }}
                 start={{ x: 0, y: 0.5 }}
                 style={styles.button}>
-                <Text style={styles.buttonText}>Criar Conta</Text>
+                <Text style={styles.buttonText}>Validar Codigo</Text>
               </LinearGradient>
             </TouchableOpacity>
 
             <View style={styles.signupRow}>
-              <Text style={styles.signupText}>Possui uma conta?</Text>
+              <Text style={styles.signupText}>Nao recebeu o codigo?</Text>
               <TouchableOpacity
                 activeOpacity={0.6}
-                onPress={() => router.push('/tela_login_responsavel')}
+                onPress={() => router.replace('./tela_recuperar_senha_responsavel')}
                 style={styles.signupLinkWrapper}>
-                <Text style={styles.signupHighlight}>Entre agora</Text>
+                <Text style={styles.signupHighlight}>Enviar novamente</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -105,6 +98,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     backgroundColor: '#FFFFFF',
   },
+  backButton: {
+    position: 'absolute',
+    top: 40,
+    left: 28,
+    zIndex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    backgroundColor: '#DCE7FF',
+  },
+  backButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0C4DFF',
+  },
   logo: {
     width: 118,
     height: 118,
@@ -123,7 +131,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: '#2E2E2E',
     textAlign: 'center',
-    marginBottom: 34,
+    marginBottom: 56,
   },
   form: {
     width: '100%',
@@ -138,15 +146,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#151515',
     backgroundColor: '#FFFFFF',
-    marginBottom: 16,
+    marginBottom: 110,
+    textAlign: 'center',
+    letterSpacing: 6,
   },
   buttonWrapper: {
     alignItems: 'center',
-    marginTop: 26,
     marginBottom: 18,
   },
   button: {
-    minWidth: 116,
+    minWidth: 150,
     paddingVertical: 15,
     paddingHorizontal: 28,
     borderRadius: 999,

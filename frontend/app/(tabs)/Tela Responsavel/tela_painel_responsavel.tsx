@@ -12,7 +12,7 @@ export default function TelaPainelResponsavel() {
 
           <TouchableOpacity
             activeOpacity={0.6}
-            onPress={() => router.push('/tela_editar_perfil_responsavel')}
+            onPress={() => router.push('./tela_editar_perfil_responsavel')}
             style={styles.avatar}>
             <Ionicons name="person" size={18} color="#1F1F1F" />
           </TouchableOpacity>
@@ -42,7 +42,7 @@ export default function TelaPainelResponsavel() {
 
           <TouchableOpacity
             activeOpacity={0.6}
-            onPress={() => router.push('/tela_home_responsavel')}
+            onPress={() => router.push('./tela_home_responsavel')}
             style={styles.navItem}>
             <Ionicons name="home-outline" size={26} color="#121212" />
             <Text style={styles.navLabel}>Home</Text>
@@ -50,7 +50,7 @@ export default function TelaPainelResponsavel() {
 
           <TouchableOpacity
             activeOpacity={0.6}
-            onPress={() => router.push('/tela_config_responsavel')}
+            onPress={() => router.push('./tela_config_responsavel')}
             style={styles.navItem}>
             <Feather name="settings" size={24} color="#121212" />
             <Text style={styles.navLabel}>Configurações</Text>

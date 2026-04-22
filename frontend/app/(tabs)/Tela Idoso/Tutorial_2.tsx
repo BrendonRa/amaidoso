@@ -15,7 +15,7 @@ export default function HomeScreen({ goToTutorial }: Props) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f2f2f2" }}>
 
-      {/* 🔝 TOPO */}
+      {/*  TOPO */}
       <View style={{ flex: 1 }}>
         <View
           style={{
@@ -61,7 +61,7 @@ export default function HomeScreen({ goToTutorial }: Props) {
               marginBottom: 20,
             }}
           >
-            Abaixo está a barra de navegação, onde você pode alterar entre as abas: Painel, Home e Definições
+            Esta é a tela inicial onde aparecerá as próximas tarefas
           </Text>
 
           <TouchableOpacity
@@ -85,7 +85,7 @@ export default function HomeScreen({ goToTutorial }: Props) {
         </View>
       </View>
 
-      {/* 🔻 BARRA INFERIOR (3 BOTÕES) */}
+      {/*  BARRA INFERIOR (3 BOTÕES) */}
       <View
         style={{
           height: 80,
@@ -100,7 +100,7 @@ export default function HomeScreen({ goToTutorial }: Props) {
         {/* BOTÃO 1 */}
         <TouchableOpacity onPress={() => console.log("Mudanças")}>
           <Image
-            source={require("../../assets/images/mudancas.png")}
+            source={require("../../../assets/images/mudancas.png")}
             style={{ width: 28, height: 28 }}
           />
         </TouchableOpacity>
@@ -108,7 +108,7 @@ export default function HomeScreen({ goToTutorial }: Props) {
         {/* BOTÃO 2 */}
         <TouchableOpacity onPress={() => console.log("Home")}>
           <Image
-            source={require("../../assets/images/home.png")}
+            source={require("../../../assets/images/home.png")}
             style={{ width: 28, height: 28 }}
           />
         </TouchableOpacity>
@@ -116,7 +116,7 @@ export default function HomeScreen({ goToTutorial }: Props) {
         {/* BOTÃO 3 */}
         <TouchableOpacity onPress={() => console.log("Configurações")}>
           <Image
-            source={require("../../assets/images/config.png")}
+            source={require("../../../assets/images/config.png")}
             style={{ width: 28, height: 28 }}
           />
         </TouchableOpacity>

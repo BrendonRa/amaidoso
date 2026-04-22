@@ -10,7 +10,7 @@ export default function TelaEditarPerfilResponsavel() {
         <View style={styles.blueSection}>
           <TouchableOpacity
             activeOpacity={0.6}
-            onPress={() => router.push('/tela_home_responsavel')}
+            onPress={() => router.push('./tela_home_responsavel')}
             style={styles.backButton}>
             <Feather name="arrow-left" size={18} color="#111111" />
             <Text style={styles.backText}>Voltar</Text>
@@ -50,7 +50,7 @@ export default function TelaEditarPerfilResponsavel() {
 
             <TouchableOpacity
               activeOpacity={0.6}
-              onPress={() => router.push('/tela_edicao_perfil_responsavel')}
+              onPress={() => router.push('./tela_edicao_perfil_responsavel')}
               style={styles.editButton}>
               <Feather name="edit-2" size={16} color="#FFFFFF" />
               <Text style={styles.editButtonText}>Editar</Text>
@@ -61,7 +61,7 @@ export default function TelaEditarPerfilResponsavel() {
         <View style={styles.bottomBar}>
           <TouchableOpacity
             activeOpacity={0.6}
-            onPress={() => router.push('/tela_painel_responsavel')}
+            onPress={() => router.push('./tela_painel_responsavel')}
             style={styles.navItem}>
             <Feather name="edit-3" size={24} color="#121212" />
             <Text style={styles.navLabel}>Painel</Text>
@@ -69,7 +69,7 @@ export default function TelaEditarPerfilResponsavel() {
 
           <TouchableOpacity
             activeOpacity={0.6}
-            onPress={() => router.push('/tela_home_responsavel')}
+            onPress={() => router.push('./tela_home_responsavel')}
             style={styles.navItem}>
             <Ionicons name="home-outline" size={26} color="#121212" />
             <Text style={styles.navLabel}>Home</Text>
@@ -77,7 +77,7 @@ export default function TelaEditarPerfilResponsavel() {
 
           <TouchableOpacity
             activeOpacity={0.6}
-            onPress={() => router.push('/tela_config_responsavel')}
+            onPress={() => router.push('./tela_config_responsavel')}
             style={styles.navItem}>
             <Feather name="settings" size={24} color="#121212" />
             <Text style={styles.navLabel}>Configurações</Text>

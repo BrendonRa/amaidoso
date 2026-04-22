@@ -4,7 +4,9 @@ import { Image } from 'expo-image';
 import React from 'react';
 import {
   KeyboardAvoidingView,
+  Modal,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -15,6 +17,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TelaRecuperarSenhaResponsavel() {
   const [email, setEmail] = React.useState('');
+  const [showSuccessModal, setShowSuccessModal] = React.useState(false);
+
+  const handleSendLink = () => {
+    setShowSuccessModal(true);
+  };
+
+  const handleContinue = () => {
+    setShowSuccessModal(false);
+    router.push('./tela_recuperar_senha_codigo_responsavel');
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -22,8 +34,14 @@ export default function TelaRecuperarSenhaResponsavel() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}>
         <View style={styles.content}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.back()}
+            style={styles.backButton}>
+            <Text style={styles.backButtonText}>Voltar</Text>
+          </TouchableOpacity>
           <Image
-            source={require('../../assets/images/logo.jpeg')}
+            source={require('../../../assets/images/logo.jpeg')}
             style={styles.logo}
             contentFit="contain"
           />
@@ -44,7 +62,7 @@ export default function TelaRecuperarSenhaResponsavel() {
               value={email}
             />
 
-            <TouchableOpacity activeOpacity={0.6} onPress={() => {}} style={styles.buttonWrapper}>
+            <TouchableOpacity activeOpacity={0.6} onPress={handleSendLink} style={styles.buttonWrapper}>
               <LinearGradient
                 colors={['#2E6BFF', '#0047FF']}
                 end={{ x: 1, y: 0.5 }}
@@ -58,7 +76,7 @@ export default function TelaRecuperarSenhaResponsavel() {
               <Text style={styles.signupText}>Já possui uma conta?</Text>
               <TouchableOpacity
                 activeOpacity={0.6}
-                onPress={() => router.push('/tela_login_responsavel')}
+                onPress={() => router.push('./tela_login_responsavel')}
                 style={styles.signupLinkWrapper}>
                 <Text style={styles.signupHighlight}>Entre agora</Text>
               </TouchableOpacity>
@@ -66,6 +84,33 @@ export default function TelaRecuperarSenhaResponsavel() {
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={showSuccessModal}
+        onRequestClose={() => setShowSuccessModal(false)}>
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowSuccessModal(false)} />
+          <View style={styles.modalCard}>
+            <View style={styles.modalIconWrap}>
+              <Text style={styles.modalIcon}>@</Text>
+            </View>
+            <Text style={styles.modalTitle}>Link enviado</Text>
+            <Text style={styles.modalText}>
+              Enviamos as instrucoes para o seu email. Agora voce ira para a tela onde pode inserir
+              o codigo recebido para redefinir sua senha.
+            </Text>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={handleContinue}
+              style={styles.modalButton}>
+              <Text style={styles.modalButtonText}>Continuar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -84,6 +129,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 28,
     backgroundColor: '#FFFFFF',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 40,
+    left: 28,
+    zIndex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    backgroundColor: '#DCE7FF',
+  },
+  backButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0C4DFF',
   },
   logo: {
     width: 118,
@@ -153,5 +213,72 @@ const styles = StyleSheet.create({
   signupHighlight: {
     fontWeight: '700',
     color: '#111111',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    backgroundColor: 'rgba(0, 0, 0, 0.28)',
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 22,
+    paddingTop: 24,
+    paddingBottom: 20,
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 8,
+  },
+  modalIconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 999,
+    backgroundColor: '#DCE7FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  modalIcon: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#0C4DFF',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#161616',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  modalText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#4B4B4B',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalButton: {
+    minWidth: 150,
+    minHeight: 46,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0C4DFF',
+    paddingHorizontal: 18,
+  },
+  modalButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

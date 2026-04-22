@@ -5,14 +5,13 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Image,
-  Alert,
 } from "react-native";
 
 type Props = {
-  goToHome: () => void;
+  goToTutorial: () => void;
 };
 
-export default function TutorialScreen({ goToHome }: Props) {
+export default function HomeScreen({ goToTutorial }: Props) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f2f2f2" }}>
 
@@ -21,7 +20,7 @@ export default function TutorialScreen({ goToHome }: Props) {
         <View
           style={{
             height: 100,
-            backgroundColor: "#F4A261",
+            backgroundColor: "#FF9230",
             justifyContent: "center",
             paddingHorizontal: 20,
           }}
@@ -59,43 +58,30 @@ export default function TutorialScreen({ goToHome }: Props) {
             style={{
               fontSize: 16,
               textAlign: "center",
-              marginBottom: 25,
+              marginBottom: 20,
             }}
           >
-            Parece que essa é a sua primeira vez aqui, deseja realizar o tutorial?
+            Abaixo está a barra de navegação, onde você pode alterar entre as abas: Painel, Home e Definições
           </Text>
 
-          <View
+          <TouchableOpacity
+            onPress={goToTutorial}
             style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
+              backgroundColor: "#FF9230",
+              paddingVertical: 14,
+              borderRadius: 25,
               alignItems: "center",
             }}
           >
-            <TouchableOpacity onPress={goToHome}>
-              <Text>Não, obrigado</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => Alert.alert("Tutorial", "Iniciar tutorial")}
+            <Text
               style={{
-                backgroundColor: "#FF9230",
-                paddingVertical: 14,
-                paddingHorizontal: 25,
-                borderRadius: 25,
-                alignItems: "center",
+                color: "#fff",
+                fontWeight: "bold",
               }}
             >
-              <Text
-                style={{
-                  color: "#fff",
-                  fontWeight: "bold",
-                }}
-              >
-                Sim
-              </Text>
-            </TouchableOpacity>
-          </View>
+              Avançar
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -114,15 +100,15 @@ export default function TutorialScreen({ goToHome }: Props) {
         {/* BOTÃO 1 */}
         <TouchableOpacity onPress={() => console.log("Mudanças")}>
           <Image
-            source={require("../../assets/images/mudancas.png")}
+            source={require("../../../assets/images/mudancas.png")}
             style={{ width: 28, height: 28 }}
           />
         </TouchableOpacity>
 
         {/* BOTÃO 2 */}
-        <TouchableOpacity onPress={goToHome}>
+        <TouchableOpacity onPress={() => console.log("Home")}>
           <Image
-            source={require("../../assets/images/home.png")}
+            source={require("../../../assets/images/home.png")}
             style={{ width: 28, height: 28 }}
           />
         </TouchableOpacity>
@@ -130,7 +116,7 @@ export default function TutorialScreen({ goToHome }: Props) {
         {/* BOTÃO 3 */}
         <TouchableOpacity onPress={() => console.log("Configurações")}>
           <Image
-            source={require("../../assets/images/config.png")}
+            source={require("../../../assets/images/config.png")}
             style={{ width: 28, height: 28 }}
           />
         </TouchableOpacity>
