@@ -3,11 +3,16 @@ import React from 'react';
 import { Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import IdosoBottomNav from './IdosoBottomNav';
 
-const cards = [
+type Card = {
+  title: string;
+  route?: './tela_lembretes' | './tela_medicacao';
+};
+
+const cards: Card[] = [
   { title: 'Lembretes', route: './tela_lembretes' },
   { title: 'Confirmar Medicacoes', route: './tela_medicacao' },
   { title: 'Anotacoes' },
-] as const;
+];
 
 export default function TelaPrincipalIdoso() {
   return (
@@ -33,8 +38,9 @@ export default function TelaPrincipalIdoso() {
                   router.push(card.route);
                 }
               }}
+              disabled={!card.route}
               style={styles.button}>
-              <Text style={styles.buttonText}>Entrar</Text>
+              <Text style={styles.buttonText}>{card.route ? 'Entrar' : 'Em breve'}</Text>
             </TouchableOpacity>
           </View>
         ))}

@@ -14,14 +14,74 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import axios from 'axios';
+import api from '@/app/services/api';
+import { useResponsavelProfile } from '@/contexts/responsavel-profile-context';
 
 export default function HomeScreen() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [errorMessage, setErrorMessage] = React.useState('');
+  const [errorTitle, setErrorTitle] = React.useState('Erro no login');
+  const [showErrorModal, setShowErrorModal] = React.useState(false);
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { updateProfile } = useResponsavelProfile();
 
-  const handleLogin = () => {
-    setShowSuccessModal(true);
+  const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  const openErrorModal = (title: string, message: string) => {
+    setErrorTitle(title);
+    setErrorMessage(message);
+    setShowErrorModal(true);
+  };
+
+  const handleLogin = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail || !password) {
+      const message = 'Preencha email e senha para continuar.';
+      openErrorModal('Campos obrigatórios', message);
+      return;
+    }
+
+    if (!isValidEmail(normalizedEmail)) {
+      const message = 'Digite um email válido para entrar.';
+      openErrorModal('Email inválido', message);
+      return;
+    }
+
+    try {
+      setErrorMessage('');
+      setShowErrorModal(false);
+      setIsSubmitting(true);
+
+      const response = await api.post('/auth/responsavel/login', {
+        email: normalizedEmail,
+        senha: password,
+      });
+
+      const user = response.data.user;
+
+      updateProfile({
+        nome: user.nome,
+        usuario: user.nome,
+        email: user.email,
+        photoUri: user.fotoPerfil ?? null,
+      });
+
+      setShowSuccessModal(true);
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.error ??
+          (error.request
+            ? 'Não foi possível conectar ao servidor. Verifique se o backend está ligado.'
+            : 'Não foi possível fazer login agora.')
+        : 'Não foi possível fazer login agora.';
+
+      openErrorModal('Erro no login', message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleContinue = () => {
@@ -56,7 +116,12 @@ export default function HomeScreen() {
             <TextInput
               autoCapitalize="none"
               keyboardType="email-address"
-              onChangeText={setEmail}
+              onChangeText={(value) => {
+                setEmail(value);
+                if (showErrorModal) {
+                  setShowErrorModal(false);
+                }
+              }}
               placeholder="Email"
               placeholderTextColor="#737373"
               style={styles.input}
@@ -64,13 +129,24 @@ export default function HomeScreen() {
             />
 
             <TextInput
-              onChangeText={setPassword}
+              onChangeText={(value) => {
+                setPassword(value);
+                if (showErrorModal) {
+                  setShowErrorModal(false);
+                }
+              }}
               placeholder="Senha"
               placeholderTextColor="#737373"
               secureTextEntry
               style={styles.input}
               value={password}
             />
+
+            {errorMessage ? (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{errorMessage}</Text>
+              </View>
+            ) : null}
 
             <TouchableOpacity
               activeOpacity={0.6}
@@ -82,13 +158,14 @@ export default function HomeScreen() {
             <TouchableOpacity
               activeOpacity={0.6}
               onPress={handleLogin}
+              disabled={isSubmitting}
               style={styles.buttonWrapper}>
               <LinearGradient
                 colors={['#2E6BFF', '#0047FF']}
                 end={{ x: 1, y: 0.5 }}
                 start={{ x: 0, y: 0.5 }}
                 style={styles.button}>
-                <Text style={styles.buttonText}>Entrar</Text>
+                <Text style={styles.buttonText}>{isSubmitting ? 'Entrando...' : 'Entrar'}</Text>
               </LinearGradient>
             </TouchableOpacity>
 
@@ -104,6 +181,30 @@ export default function HomeScreen() {
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={showErrorModal}
+        onRequestClose={() => setShowErrorModal(false)}>
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowErrorModal(false)} />
+          <View style={styles.modalCard}>
+            <View style={styles.modalErrorIconWrap}>
+              <Text style={styles.modalErrorIcon}>!</Text>
+            </View>
+            <Text style={styles.modalTitle}>{errorTitle}</Text>
+            <Text style={styles.modalText}>{errorMessage}</Text>
+
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => setShowErrorModal(false)}
+              style={styles.modalErrorButton}>
+              <Text style={styles.modalButtonText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         animationType="fade"
@@ -201,6 +302,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     marginBottom: 16,
   },
+  errorBox: {
+    borderRadius: 14,
+    backgroundColor: '#FFE5E5',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 12,
+  },
+  errorText: {
+    color: '#B42318',
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   forgotPasswordWrapper: {
     alignSelf: 'flex-end',
     marginTop: -4,
@@ -284,6 +399,20 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#0C4DFF',
   },
+  modalErrorIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 999,
+    backgroundColor: '#FFE5E5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  modalErrorIcon: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#D92D20',
+  },
   modalTitle: {
     fontSize: 20,
     fontWeight: '800',
@@ -305,6 +434,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#0C4DFF',
+    paddingHorizontal: 18,
+  },
+  modalErrorButton: {
+    minWidth: 150,
+    minHeight: 46,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#D92D20',
     paddingHorizontal: 18,
   },
   modalButtonText: {

@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
 import React from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -15,15 +16,54 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import axios from 'axios';
+import api from '@/app/services/api';
 
 export default function TelaCadastroResponsavel() {
   const [username, setUsername] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const handleCreateAccount = () => {
-    setShowSuccessModal(true);
+  const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+  const handleCreateAccount = async () => {
+    const normalizedName = username.trim();
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedName || !normalizedEmail || !password) {
+      Alert.alert('Campos obrigatórios', 'Preencha nome, email e senha para continuar.');
+      return;
+    }
+
+    if (!isValidEmail(normalizedEmail)) {
+      Alert.alert('Email inválido', 'Digite um email válido para concluir o cadastro.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      await api.post('/auth/responsavel/register', {
+        nome: normalizedName,
+        email: normalizedEmail,
+        senha: password,
+      });
+
+      setUsername('');
+      setEmail('');
+      setPassword('');
+      setShowSuccessModal(true);
+    } catch (error) {
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.error ?? 'Não foi possível concluir o cadastro agora.'
+        : 'Não foi possível concluir o cadastro agora.';
+
+      Alert.alert('Erro no cadastro', message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleGoToLogin = () => {
@@ -86,13 +126,16 @@ export default function TelaCadastroResponsavel() {
             <TouchableOpacity
               activeOpacity={0.6}
               onPress={handleCreateAccount}
+              disabled={isSubmitting}
               style={styles.buttonWrapper}>
               <LinearGradient
                 colors={['#2E6BFF', '#0047FF']}
                 end={{ x: 1, y: 0.5 }}
                 start={{ x: 0, y: 0.5 }}
                 style={styles.button}>
-                <Text style={styles.buttonText}>Criar Conta</Text>
+                <Text style={styles.buttonText}>
+                  {isSubmitting ? 'Criando...' : 'Criar Conta'}
+                </Text>
               </LinearGradient>
             </TouchableOpacity>
 
