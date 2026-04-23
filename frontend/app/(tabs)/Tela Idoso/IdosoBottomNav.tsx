@@ -16,7 +16,7 @@ export default function IdosoBottomNav({ activeTab = 'home' }: Props) {
         <Text style={styles.navLabel}>Home</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity activeOpacity={0.8} style={styles.navItem}>
+      <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('./tela_configuracao_idoso')} style={styles.navItem}>
         <View style={[styles.navIconButton, activeTab === 'config' && styles.homeButton]}>
           <Image source={require('../../../assets/images/config.png')} style={styles.navIcon} />
         </View>
