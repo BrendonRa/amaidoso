@@ -1,11 +1,24 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
-import { Modal, Pressable, SafeAreaView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, Modal, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function TelaConfigResponsavel() {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
+  const thumbAnim = React.useRef(new Animated.Value(1)).current;
+
+  React.useEffect(() => {
+    Animated.timing(thumbAnim, {
+      toValue: notificationsEnabled ? 1 : 0,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  }, [notificationsEnabled, thumbAnim]);
+
+  const toggleNotifications = () => {
+    setNotificationsEnabled((prev) => !prev);
+  };
 
   const handleLogout = () => {
     setShowLogoutModal(true);
@@ -19,7 +32,7 @@ export default function TelaConfigResponsavel() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.title}>DEFINIÇÕES</Text>
+        <Text style={styles.title}>configurações</Text>
 
         <View style={styles.list}>
           <TouchableOpacity
@@ -37,13 +50,26 @@ export default function TelaConfigResponsavel() {
 
           <View style={styles.itemCard}>
             <Text style={styles.itemLabel}>Notificações</Text>
-            <Switch
-              ios_backgroundColor="#D9D9D9"
-              onValueChange={setNotificationsEnabled}
-              thumbColor="#FFFFFF"
-              trackColor={{ false: '#D9D9D9', true: '#9AB8FF' }}
-              value={notificationsEnabled}
-            />
+            <Pressable
+              onPress={toggleNotifications}
+              style={[styles.toggleButton, notificationsEnabled ? styles.toggleOn : styles.toggleOff]}
+            >
+              <Animated.View
+                style={[
+                  styles.toggleThumb,
+                  {
+                    transform: [
+                      {
+                        translateX: thumbAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [2, 24],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              />
+            </Pressable>
           </View>
 
           <TouchableOpacity activeOpacity={0.6} style={styles.itemCard}>
@@ -78,7 +104,7 @@ export default function TelaConfigResponsavel() {
             activeOpacity={0.6}
             onPress={() => router.push('./tela_home_responsavel')}
             style={styles.navItem}>
-            <Ionicons name="home-outline" size={26} color="#121212" />
+            <Image source={require('../../../assets/images/home.png')} style={styles.navIcon} />
             <Text style={styles.navLabel}>Home</Text>
           </TouchableOpacity>
 
@@ -204,6 +230,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  navIcon: {
+    width: 26,
+    height: 26,
+    resizeMode: 'contain',
+  },
   activePill: {
     width: 52,
     height: 30,
@@ -297,5 +328,24 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  toggleButton: {
+    width: 52,
+    height: 28,
+    borderRadius: 999,
+    padding: 3,
+    justifyContent: 'center',
+  },
+  toggleOn: {
+    backgroundColor: '#9AB8FF',
+  },
+  toggleOff: {
+    backgroundColor: '#E6E6E6',
+  },
+  toggleThumb: {
+    width: 22,
+    height: 22,
+    borderRadius: 999,
+    backgroundColor: '#FFFFFF',
   },
 });

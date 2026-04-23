@@ -41,7 +41,7 @@ export default function TelaHomeResponsavel() {
 
           <TouchableOpacity activeOpacity={0.6} style={styles.navItem}>
             <View style={styles.homeActive}>
-              <Ionicons name="home-outline" size={26} color="#121212" />
+              <Image source={require('../../../assets/images/home.png')} style={styles.navIcon} />
             </View>
             <Text style={styles.navLabel}>Home</Text>
           </TouchableOpacity>
@@ -124,6 +124,11 @@ const styles = StyleSheet.create({
     minWidth: 64,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  navIcon: {
+    width: 26,
+    height: 26,
+    resizeMode: 'contain',
   },
   navLabel: {
     marginTop: 4,
