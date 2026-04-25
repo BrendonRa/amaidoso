@@ -24,4 +24,14 @@ export class UserService {
     await connection.query(sql, [id]);
     return { message: "Usuário deletado" };
   }
+  async login(input1: String, input2: String, type: String) {
+    let sql;
+    if (type === "idoso") {
+      sql = `SELECT * FROM ${type} WHERE cpf = (?) AND senha = (?)`;
+    } else {
+      sql = `SELECT * FROM ${type} WHERE email = (?) AND senha = (?)`;
+    }
+    const [rows] = await connection.query(sql, [input1, input2]);
+    return rows;
+  }
 }

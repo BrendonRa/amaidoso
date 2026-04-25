@@ -27,4 +27,12 @@ export class UserController {
     console.log(userSelecter);
     return res.status(201).json(userSelecter)
   }
+  async login(req: Request, res: Response) {
+    const email = Array.isArray(req.params.cpf) ? req.params.cpf[0] : req.params.cpf;
+    const senha = Array.isArray(req.params.senha) ? req.params.senha[0] : req.params.senha;
+    const service = new UserService();
+    const userLogin = await service.login(email, senha, "idoso").then();
+    console.log(userLogin);
+    return res.status(201).json(userLogin)
+  }
 }

@@ -8,5 +8,6 @@ const controller = new UserController();
 userRoutes.post("/idoso", controller.create);
 userRoutes.get("/idoso", controller.view)
 userRoutes.get("/idoso/:id", controller.select);
+userRoutes.get("/idoso/login/:cpf/:senha", controller.login)
 
 export default userRoutes;
