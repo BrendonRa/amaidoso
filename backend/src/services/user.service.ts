@@ -1,5 +1,27 @@
+import { connection } from "../config/db";
+
 export class UserService {
-  async create(data: any) {
+  async create(data: any, type: string) {
+    const sql = `INSERT INTO ${type} (${Object.keys(data).join(', ')}) VALUES (${Object.values(data).map(() => '?').join(', ')})`;
+    connection.query(sql, Object.values(data));
     return { message: "Usuário criado", data };
+  }
+  // Pega todas as informações de idosos do Banco de Dados
+  async view() {
+    const sql = 'SELECT * FROM idoso';
+    const [rows] = await connection.query(sql);
+    return rows;
+  }
+  // Seleciona apenas um idoso da tabela IDOSO
+  async select(id: String, type: string) {
+    const sql = `SELECT * FROM ${type} WHERE id_${type} = (?)`;
+    const [rows] = await connection.query(sql, [id]);
+    return rows;
+  }
+  // Deleta um idoso da tabela IDOSO
+  async delete(id: String) {
+    const sql = 'DELETE FROM idoso WHERE id_idoso = (?)';
+    await connection.query(sql, [id]);
+    return { message: "Usuário deletado" };
   }
 }
