@@ -1,16 +1,17 @@
 export interface User {
+  id?: number
+  nome: string
+  cpf: string
+  email: string
   senha: string
 }
 
 export interface Idoso extends User {
-  nome_idoso: string,
-  data_nasc: DataTransfer,
-  cpf: string,
-  id_resposavel: Number
+  dataNasc: DataTransfer
+  sexo: string
+  idResponsavel: number
 }
 
 export interface Responsavel extends User {
-  nome_responsavel: string,
-  telefone: string,
-  email: string
+  telefone: string
 }
