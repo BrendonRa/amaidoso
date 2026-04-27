@@ -9,5 +9,6 @@ userRoutes.post("/responsavel", controller.create);
 userRoutes.get("/responsavel", controller.view)
 userRoutes.get("/responsavel/:id", controller.select)
 userRoutes.get("/responsavel/login/:email/:senha", controller.login)
+userRoutes.put("/responsavel/update/:id", controller.update)
 
 export default userRoutes;

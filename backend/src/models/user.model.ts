@@ -11,6 +11,5 @@ export interface Idoso extends User {
 
 export interface Responsavel extends User {
   nome_responsavel: string,
-  telefone: string,
   email: string
 }

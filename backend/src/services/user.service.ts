@@ -7,8 +7,8 @@ export class UserService {
     return { message: "Usuário criado", data };
   }
   // Pega todas as informações de idosos do Banco de Dados
-  async view() {
-    const sql = 'SELECT * FROM idoso';
+  async view(type: string) {
+    const sql = `SELECT * FROM ${type}`;
     const [rows] = await connection.query(sql);
     return rows;
   }
@@ -34,4 +34,11 @@ export class UserService {
     const [rows] = await connection.query(sql, [input1, input2]);
     return rows;
   }
-}
+  async update(id: String, data: any, type: string) {
+    const sql = `UPDATE ${type} 
+    SET ${Object.keys(data).map(key => `${key} = ?`).join(', ')} 
+    WHERE id_${type} = ?`;
+    await connection.query(sql, [...Object.values(data), id]);
+    return { message: "Dados atualizados", data };
+  }
+} 

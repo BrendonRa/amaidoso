@@ -16,7 +16,7 @@ export class UserController {
   }
   async view(req: Request, res: Response) {
     const service = new UserService();
-    const allUsers = await service.view().then();
+    const allUsers = await service.view("responsavel").then();
     console.log(allUsers);
     return res.status(201).json(allUsers);
   }
@@ -34,5 +34,13 @@ export class UserController {
     const userLogin = await service.login(email, senha, "responsavel").then();
     console.log(userLogin);
     return res.status(201).json(userLogin)
+  }
+  async update(req: Request, res: Response) {
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const data = req.body;
+    const service = new UserService();
+    const userUpdated = await service.update(id, data, "responsavel").then();
+    console.log(userUpdated);
+    return res.status(201).json(userUpdated)
   }
 }
