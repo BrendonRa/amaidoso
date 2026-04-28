@@ -1,13 +1,12 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/user.service";
-import { Idoso } from "../models/user.model";
 
 export class UserController {
   async create(req: Request, res: Response) {
     try {
-      const { ...Idoso } : Idoso = req.body;   
+      const { nome, dataNasc, sexo } = req.body;   
       const service = new UserService();
-      const user = service.create({...Idoso}, "idoso");
+      const user = service.create({nome, dataNasc, sexo});
       console.log(user)
       return res.status(201).json(user);
     } catch(error) {
@@ -23,7 +22,7 @@ export class UserController {
   async select(req: Request, res: Response) {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const service = new UserService();
-    const userSelecter = await service.select(id, "idoso").then();
+    const userSelecter = await service.select(id).then();
     console.log(userSelecter);
     return res.status(201).json(userSelecter)
   }
