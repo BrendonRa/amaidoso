@@ -3,11 +3,11 @@ import { UserService } from "../services/user.service";
 import { Idoso } from "../models/user.model";
 
 export class UserController {
-  async create(req: Request, res: Response) {
+  async register(req: Request, res: Response) {
     try {
       const { ...Idoso } : Idoso = req.body;   
       const service = new UserService();
-      const user = service.create({...Idoso}, "idoso");
+      const user = service.register({...Idoso}, "idoso");
       console.log(user)
       return res.status(201).json(user);
     } catch(error) {

@@ -1,7 +1,7 @@
 import { connection } from "../config/db";
-
+// Para cadastrar um usuário
 export class UserService {
-  async create(data: any, type: string) {
+  async register(data: any, type: string) {
     const sql = `INSERT INTO ${type} (${Object.keys(data).join(', ')}) VALUES (${Object.values(data).map(() => '?').join(', ')})`;
     connection.query(sql, Object.values(data));
     return { message: "Usuário criado", data };
@@ -41,4 +41,4 @@ export class UserService {
     await connection.query(sql, [...Object.values(data), id]);
     return { message: "Dados atualizados", data };
   }
-} 
+}

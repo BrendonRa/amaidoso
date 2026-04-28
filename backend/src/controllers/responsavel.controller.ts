@@ -3,11 +3,11 @@ import { UserService } from "../services/user.service";
 import { Responsavel } from "../models/user.model";
 
 export class UserController {
-  async create(req: Request, res: Response) {
+  async register(req: Request, res: Response) {
     try {
       const { ...Responsavel } : Responsavel = req.body;   
       const service = new UserService();
-      const user = service.create({...Responsavel}, "responsavel");
+      const user = service.register({...Responsavel}, "responsavel");
       console.log(user)
       return res.status(201).json(user);
     } catch(error) {
