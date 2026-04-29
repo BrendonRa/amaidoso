@@ -1,58 +1,39 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import React from 'react';
-import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import axios from 'axios';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image } from 'expo-image';
+
 import api from '@/app/services/api';
 import { useResponsavelProfile } from '@/contexts/responsavel-profile-context';
+import { AuthLayout } from '@/src/components/auth/AuthLayout';
+import { FeedbackModal } from '@/src/components/auth/FeedbackModal';
+import { PrimaryButton } from '@/src/components/auth/PrimaryButton';
+import { TextField } from '@/src/components/auth/TextField';
+import { getApiErrorMessage, isValidEmail, normalizeEmail } from '@/src/utils/auth';
 
 export default function HomeScreen() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [errorMessage, setErrorMessage] = React.useState('');
-  const [errorTitle, setErrorTitle] = React.useState('Erro no login');
-  const [showErrorModal, setShowErrorModal] = React.useState(false);
+  const [error, setError] = React.useState<{ title: string; message: string } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { updateProfile } = useResponsavelProfile();
 
-  const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  const openErrorModal = (title: string, message: string) => {
-    setErrorTitle(title);
-    setErrorMessage(message);
-    setShowErrorModal(true);
-  };
-
   const handleLogin = async () => {
-    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
 
     if (!normalizedEmail || !password) {
-      const message = 'Preencha email e senha para continuar.';
-      openErrorModal('Campos obrigatórios', message);
+      setError({ title: 'Campos obrigatórios', message: 'Preencha email e senha para continuar.' });
       return;
     }
 
     if (!isValidEmail(normalizedEmail)) {
-      const message = 'Digite um email válido para entrar.';
-      openErrorModal('Email inválido', message);
+      setError({ title: 'Email inválido', message: 'Digite um email válido para entrar.' });
       return;
     }
 
     try {
-      setErrorMessage('');
-      setShowErrorModal(false);
+      setError(null);
       setIsSubmitting(true);
 
       const response = await api.post('/auth/responsavel/login', {
@@ -71,14 +52,10 @@ export default function HomeScreen() {
 
       setShowSuccessModal(true);
     } catch (error) {
-      const message = axios.isAxiosError(error)
-        ? error.response?.data?.error ??
-          (error.request
-            ? 'Não foi possível conectar ao servidor. Verifique se o backend está ligado.'
-            : 'Não foi possível fazer login agora.')
-        : 'Não foi possível fazer login agora.';
-
-      openErrorModal('Erro no login', message);
+      setError({
+        title: 'Erro no login',
+        message: getApiErrorMessage(error, 'Não foi possível fazer login agora.'),
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -90,173 +67,102 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.keyboardView}>
-        <View style={styles.content}>
+    <AuthLayout
+      title="Entre Agora"
+      subtitle={'Por favor entre na sua conta para\ncontinuar usando nosso app'}
+      titleStyle={styles.title}
+      brand={<Image source={require('../../../assets/images/logo.jpeg')} style={styles.logo} contentFit="contain" />}
+      headerLeft={
+        <TouchableOpacity activeOpacity={0.7} onPress={() => router.back()} style={styles.backButton}>
+          <Text style={styles.backButtonText}>Voltar</Text>
+        </TouchableOpacity>
+      }
+      footer={
+        <View style={styles.signupRow}>
+          <Text style={styles.signupText}>Não possui uma conta?</Text>
           <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => router.back()}
-            style={styles.backButton}>
-            <Text style={styles.backButtonText}>Voltar</Text>
+            activeOpacity={0.8}
+            onPress={() => router.push('./tela_cadastro_responsavel')}>
+            <Text style={styles.signupHighlight}>Crie uma agora</Text>
           </TouchableOpacity>
-          <Image
-            source={require('../../../assets/images/logo.jpeg')}
-            style={styles.logo}
-            contentFit="contain"
-          />
-
-          <Text style={styles.title}>Entre Agora</Text>
-          <Text style={styles.subtitle}>
-            Por favor entre na sua conta para{'\n'}continuar usando nosso app
-          </Text>
-
-          <View style={styles.form}>
-            <TextInput
-              autoCapitalize="none"
-              keyboardType="email-address"
-              onChangeText={(value) => {
-                setEmail(value);
-                if (showErrorModal) {
-                  setShowErrorModal(false);
-                }
-              }}
-              placeholder="Email"
-              placeholderTextColor="#737373"
-              style={styles.input}
-              value={email}
-            />
-
-            <TextInput
-              onChangeText={(value) => {
-                setPassword(value);
-                if (showErrorModal) {
-                  setShowErrorModal(false);
-                }
-              }}
-              placeholder="Senha"
-              placeholderTextColor="#737373"
-              secureTextEntry
-              style={styles.input}
-              value={password}
-            />
-
-            {errorMessage ? (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{errorMessage}</Text>
-              </View>
-            ) : null}
-
-            <TouchableOpacity
-              activeOpacity={0.6}
-              onPress={() => router.push('./tela_recuperar_senha_responsavel')}
-              style={styles.forgotPasswordWrapper}>
-              <Text style={styles.forgotPasswordText}>Recuperar senha</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.6}
-              onPress={handleLogin}
-              disabled={isSubmitting}
-              style={styles.buttonWrapper}>
-              <LinearGradient
-                colors={['#2E6BFF', '#0047FF']}
-                end={{ x: 1, y: 0.5 }}
-                start={{ x: 0, y: 0.5 }}
-                style={styles.button}>
-                <Text style={styles.buttonText}>{isSubmitting ? 'Entrando...' : 'Entrar'}</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-
-            <View style={styles.signupRow}>
-              <Text style={styles.signupText}>Não possui uma conta?</Text>
-              <TouchableOpacity
-                activeOpacity={0.6}
-                onPress={() => router.push('./tela_cadastro_responsavel')}
-                style={styles.signupLinkWrapper}>
-                <Text style={styles.signupHighlight}>Cria uma agora</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
         </View>
-      </KeyboardAvoidingView>
+      }>
+      <View style={styles.form}>
+        <TextField
+          value={email}
+          onChangeText={(v) => {
+            setEmail(v);
+            setError(null);
+          }}
+          placeholder="Email"
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <TextField
+          value={password}
+          onChangeText={(v) => {
+            setPassword(v);
+            setError(null);
+          }}
+          placeholder="Senha"
+          secureTextEntry
+        />
 
-      <Modal
-        animationType="fade"
-        transparent
-        visible={showErrorModal}
-        onRequestClose={() => setShowErrorModal(false)}>
-        <View style={styles.modalOverlay}>
-          <Pressable style={styles.modalBackdrop} onPress={() => setShowErrorModal(false)} />
-          <View style={styles.modalCard}>
-            <View style={styles.modalErrorIconWrap}>
-              <Text style={styles.modalErrorIcon}>!</Text>
-            </View>
-            <Text style={styles.modalTitle}>{errorTitle}</Text>
-            <Text style={styles.modalText}>{errorMessage}</Text>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => router.push('./tela_recuperar_senha_responsavel')}
+          style={styles.forgotPasswordWrapper}>
+          <Text style={styles.forgotPasswordText}>Recuperar senha</Text>
+        </TouchableOpacity>
 
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={() => setShowErrorModal(false)}
-              style={styles.modalErrorButton}>
-              <Text style={styles.modalButtonText}>Fechar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        <PrimaryButton
+          title={isSubmitting ? 'Entrando...' : 'Entrar'}
+          onPress={handleLogin}
+          disabled={isSubmitting}
+          style={styles.primaryButton}
+          gradientColors={['#2E6BFF', '#0047FF']}
+        />
+      </View>
 
-      <Modal
-        animationType="fade"
-        transparent
+      <FeedbackModal
+        visible={!!error}
+        variant="error"
+        title={error?.title ?? 'Erro'}
+        message={error?.message ?? ''}
+        primaryActionLabel="Fechar"
+        primaryColor="#D92D20"
+        onPrimaryAction={() => setError(null)}
+        onClose={() => setError(null)}
+      />
+      <FeedbackModal
         visible={showSuccessModal}
-        onRequestClose={() => setShowSuccessModal(false)}>
-        <View style={styles.modalOverlay}>
-          <Pressable style={styles.modalBackdrop} onPress={() => setShowSuccessModal(false)} />
-          <View style={styles.modalCard}>
-            <View style={styles.modalIconWrap}>
-              <Text style={styles.modalIcon}>✓</Text>
-            </View>
-            <Text style={styles.modalTitle}>Login realizado com sucesso</Text>
-            <Text style={styles.modalText}>
-              Seu acesso foi confirmado. Clique em continuar para entrar no app.
-            </Text>
-
-            <TouchableOpacity
-              activeOpacity={0.85}
-              onPress={handleContinue}
-              style={styles.modalButton}>
-              <Text style={styles.modalButtonText}>Continuar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
-
-    
+        variant="success"
+        title="Login realizado com sucesso"
+        message="Seu acesso foi confirmado. Clique em continuar para entrar no app."
+        primaryActionLabel="Continuar"
+        primaryColor="#0C4DFF"
+        onPrimaryAction={handleContinue}
+        onClose={() => setShowSuccessModal(false)}
+      />
+    </AuthLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
+  logo: {
+    width: 118,
+    height: 118,
+    marginBottom: 18,
   },
-  keyboardView: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 28,
-    backgroundColor: '#FFFFFF',
+  title: {
+    color: '#0C4DFF',
+    fontSize: 30,
+    lineHeight: 36,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 10,
   },
   backButton: {
-    position: 'absolute',
-    top: 40,
-    left: 28,
-    zIndex: 1,
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 999,
@@ -267,187 +173,39 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0C4DFF',
   },
-  logo: {
-    width: 118,
-    height: 118,
-    marginBottom: 18,
-  },
-  title: {
-    fontSize: 30,
-    lineHeight: 36,
-    fontWeight: '700',
-    color: '#0C4DFF',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: '#2E2E2E',
-    textAlign: 'center',
-    marginBottom: 34,
-  },
   form: {
     width: '100%',
     maxWidth: 320,
-  },
-  input: {
-    height: 58,
-    borderWidth: 1,
-    borderColor: '#B8B8B8',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#151515',
-    backgroundColor: '#FFFFFF',
-    marginBottom: 16,
-  },
-  errorBox: {
-    borderRadius: 14,
-    backgroundColor: '#FFE5E5',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 12,
-  },
-  errorText: {
-    color: '#B42318',
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '600',
-    textAlign: 'center',
+    alignSelf: 'center',
   },
   forgotPasswordWrapper: {
     alignSelf: 'flex-end',
     marginTop: -4,
-    marginBottom: 42,
+    marginBottom: 18,
   },
   forgotPasswordText: {
     fontSize: 11,
     color: '#3C3C3C',
     textDecorationLine: 'underline',
   },
-  buttonWrapper: {
-    alignItems: 'center',
-    marginBottom: 18,
-  },
-  button: {
-    minWidth: 116,
-    paddingVertical: 15,
-    paddingHorizontal: 28,
-    borderRadius: 999,
-    alignItems: 'center',
-  },
-  buttonText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
+  primaryButton: {
+    alignSelf: 'center',
   },
   signupRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   signupText: {
     fontSize: 12,
     color: '#1E1E1E',
     textAlign: 'center',
   },
-  signupLinkWrapper: {
-    alignSelf: 'center',
-  },
   signupHighlight: {
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '800',
     color: '#111111',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    backgroundColor: 'rgba(0, 0, 0, 0.28)',
-  },
-  modalBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: 340,
-    borderRadius: 24,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 22,
-    paddingTop: 24,
-    paddingBottom: 20,
-    alignItems: 'center',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 18,
-    elevation: 8,
-  },
-  modalIconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 999,
-    backgroundColor: '#DCE7FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-  },
-  modalIcon: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#0C4DFF',
-  },
-  modalErrorIconWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 999,
-    backgroundColor: '#FFE5E5',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-  },
-  modalErrorIcon: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#D92D20',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#161616',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  modalText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#4B4B4B',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  modalButton: {
-    minWidth: 150,
-    minHeight: 46,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0C4DFF',
-    paddingHorizontal: 18,
-  },
-  modalErrorButton: {
-    minWidth: 150,
-    minHeight: 46,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#D92D20',
-    paddingHorizontal: 18,
-  },
-  modalButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    textDecorationLine: 'underline',
   },
 });
