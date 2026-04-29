@@ -1,0 +1,12 @@
+import { Router } from "express";
+import { UserController } from "../controllers/responsavel.controller";
+
+const userRoutes = Router();
+const controller = new UserController();
+
+// Aqui está todasa as requisições seguidas dos links para fazer as ações do Backend
+userRoutes.post("/responsavel", controller.create);
+userRoutes.get("/responsavel", controller.view)
+userRoutes.get("/responsavel/:id", controller.select)
+
+export default userRoutes;
