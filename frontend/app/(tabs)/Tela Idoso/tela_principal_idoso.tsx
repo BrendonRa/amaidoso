@@ -1,29 +1,39 @@
 import { router } from 'expo-router';
 import React from 'react';
 import { Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useIdosoProfile } from '@/contexts/idoso-profile-context';
 import IdosoBottomNav from './IdosoBottomNav';
 
 type Card = {
   title: string;
-  route?: './tela_lembretes' | './tela_medicacao';
+  route?: './tela_lembretes' | './tela_medicacao' | './tela_anotacoes';
 };
 
 const cards: Card[] = [
   { title: 'Lembretes', route: './tela_lembretes' },
   { title: 'Confirmar Medicacoes', route: './tela_medicacao' },
-  { title: 'Anotacoes' },
+  { title: 'Anotacoes', route: './tela_anotacoes' },
 ];
 
 export default function TelaPrincipalIdoso() {
+  const { profile } = useIdosoProfile();
+  const firstName = profile?.nome?.split(' ')[0] || 'Idoso';
+  const photoUri =
+    profile?.fotoPerfil && profile.fotoPerfil !== 'imagem_padrao.png' ? profile.fotoPerfil : null;
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.greeting}>Ola, Oswaldo Teixeira</Text>
+        <Text style={styles.greeting}>Ola, {firstName}</Text>
 
-        <Image
-          source={{ uri: 'https://wallpapers.com/images/hd/funny-old-man-pictures-29zq8pp6pi1gcap8.jpg' }}
-          style={styles.avatar}
-        />
+        <View style={styles.avatar}>
+          {photoUri ? (
+            <Image source={{ uri: photoUri }} style={styles.avatarImage} />
+          ) : (
+            <Ionicons name="person" size={22} color="#F58220" />
+          )}
+        </View>
       </View>
 
       <View style={styles.content}>
@@ -72,6 +82,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
   content: {
     flex: 1,

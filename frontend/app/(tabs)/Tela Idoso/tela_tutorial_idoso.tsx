@@ -9,7 +9,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useIdosoProfile } from '@/contexts/idoso-profile-context';
 
 type TutorialStep = {
   body: string;
@@ -44,10 +46,14 @@ const tutorialSteps: TutorialStep[] = [
 
 export default function TelaTutorialIdoso() {
   const [stepIndex, setStepIndex] = React.useState(0);
+  const { profile } = useIdosoProfile();
 
   const currentStep = tutorialSteps[stepIndex];
   const isLastStep = stepIndex === tutorialSteps.length - 1;
   const isWelcomeStep = stepIndex === 0;
+  const firstName = profile?.nome?.split(' ')[0] || 'Idoso';
+  const photoUri =
+    profile?.fotoPerfil && profile.fotoPerfil !== 'imagem_padrao.png' ? profile.fotoPerfil : null;
 
   const goNext = React.useCallback(() => {
     if (isLastStep) {
@@ -65,15 +71,14 @@ export default function TelaTutorialIdoso() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Ola, Oswaldo Teixeira</Text>
+        <Text style={styles.headerTitle}>Ola, {firstName}</Text>
 
         <Pressable style={styles.avatarContainer}>
-          <Image
-            source={{
-              uri: 'https://wallpapers.com/images/hd/funny-old-man-pictures-29zq8pp6pi1gcap8.jpg',
-            }}
-            style={styles.avatar}
-          />
+          {photoUri ? (
+            <Image source={{ uri: photoUri }} style={styles.avatar} />
+          ) : (
+            <Ionicons name="person" size={22} color="#F58220" />
+          )}
         </Pressable>
       </View>
 
@@ -124,6 +129,8 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     overflow: 'hidden',
     backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   avatar: {
     width: '100%',

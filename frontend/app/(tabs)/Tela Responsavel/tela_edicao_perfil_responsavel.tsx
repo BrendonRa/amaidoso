@@ -1,12 +1,11 @@
 import { Feather, Ionicons } from '@expo/vector-icons';
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import React from 'react';
 import {
+  Alert,
   Image,
   Modal,
-  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -18,38 +17,30 @@ import {
 } from 'react-native';
 
 import { useResponsavelProfile } from '@/contexts/responsavel-profile-context';
-
-function formatDate(date: Date) {
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = String(date.getFullYear());
-  return `${day}/${month}/${year}`;
-}
-
-function parseDateString(value: string) {
-  const match = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if (!match) return null;
-
-  const day = Number(match[1]);
-  const month = Number(match[2]) - 1;
-  const year = Number(match[3]);
-  const date = new Date(year, month, day);
-
-  if (
-    date.getFullYear() !== year ||
-    date.getMonth() !== month ||
-    date.getDate() !== day
-  ) {
-    return null;
-  }
-
-  return date;
-}
+import {
+  getCurrentResponsavelAuthProvider,
+  getAuthErrorMessage,
+  requestResponsavelEmailChange,
+} from '@/lib/firebase-auth-service';
+import { BirthDateInput } from '@/components/birth-date-input';
 
 export default function TelaEdicaoPerfilResponsavel() {
   const { profile, updateProfile } = useResponsavelProfile();
   const [showConfirmModal, setShowConfirmModal] = React.useState(false);
-  const [showDatePicker, setShowDatePicker] = React.useState(false);
+  const [showEmailSentModal, setShowEmailSentModal] = React.useState(false);
+  const [pendingEmail, setPendingEmail] = React.useState(profile.email);
+  const [currentPassword, setCurrentPassword] = React.useState('');
+  const [newPassword, setNewPassword] = React.useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = React.useState('');
+  const [formError, setFormError] = React.useState('');
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const authProvider =
+    profile.authProvider !== 'unknown' ? profile.authProvider : getCurrentResponsavelAuthProvider();
+  const shouldAskCurrentPassword = authProvider !== 'google';
+  const isChangingEmail = pendingEmail.trim().toLowerCase() !== profile.email.trim().toLowerCase();
+  const shouldCreatePassword = authProvider === 'google' && isChangingEmail;
+
+  const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
   async function pickImage() {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -71,45 +62,79 @@ export default function TelaEdicaoPerfilResponsavel() {
   }
 
   const handleConfirmChanges = () => {
-    setShowConfirmModal(true);
-  };
+    const normalizedNewEmail = pendingEmail.trim().toLowerCase();
+    const currentEmail = profile.email.trim().toLowerCase();
 
-  const handleProceed = () => {
-    setShowConfirmModal(false);
-    router.push('./tela_editar_perfil_responsavel');
-  };
-
-  const handleBirthChange = (value: string) => {
-    const digitsOnly = value.replace(/\D/g, '').slice(0, 8);
-    let maskedValue = digitsOnly;
-
-    if (digitsOnly.length > 2) {
-      maskedValue = `${digitsOnly.slice(0, 2)}/${digitsOnly.slice(2)}`;
-    }
-
-    if (digitsOnly.length > 4) {
-      maskedValue = `${digitsOnly.slice(0, 2)}/${digitsOnly.slice(2, 4)}/${digitsOnly.slice(4)}`;
-    }
-
-    updateProfile({ nascimento: maskedValue });
-  };
-
-  const openCalendar = () => {
-    setShowDatePicker(true);
-  };
-
-  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (event.type === 'dismissed') {
-      setShowDatePicker(false);
+    if (!normalizedNewEmail) {
+      setFormError('Preencha o e-mail para continuar.');
       return;
     }
 
-    if (selectedDate) {
-      updateProfile({ nascimento: formatDate(selectedDate) });
+    if (!isValidEmail(normalizedNewEmail)) {
+      setFormError('Digite um e-mail válido.');
+      return;
     }
 
-    if (Platform.OS !== 'ios') {
-      setShowDatePicker(false);
+    if (normalizedNewEmail !== currentEmail && shouldAskCurrentPassword && !currentPassword) {
+      setFormError('Digite sua senha atual para alterar o e-mail.');
+      return;
+    }
+
+    if (normalizedNewEmail !== currentEmail && shouldCreatePassword) {
+      if (!newPassword || !confirmNewPassword) {
+        setFormError('Crie e confirme uma senha para entrar com o novo e-mail.');
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        setFormError('A nova senha deve ter pelo menos 6 caracteres.');
+        return;
+      }
+
+      if (newPassword !== confirmNewPassword) {
+        setFormError('As senhas novas não conferem.');
+        return;
+      }
+    }
+
+    setFormError('');
+    setShowConfirmModal(true);
+  };
+
+  const handleProceed = async () => {
+    const normalizedNewEmail = pendingEmail.trim().toLowerCase();
+    const currentEmail = profile.email.trim().toLowerCase();
+
+    try {
+      setIsSubmitting(true);
+
+      if (normalizedNewEmail !== currentEmail) {
+        await requestResponsavelEmailChange(
+          normalizedNewEmail,
+          shouldAskCurrentPassword ? currentPassword : undefined,
+          shouldCreatePassword ? newPassword : undefined,
+        );
+        setShowConfirmModal(false);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+        if (shouldCreatePassword) {
+          updateProfile({ authProvider: 'password' });
+        }
+        setShowEmailSentModal(true);
+        return;
+      }
+
+      setShowConfirmModal(false);
+      router.push('./tela_editar_perfil_responsavel');
+    } catch (error) {
+      setShowConfirmModal(false);
+      Alert.alert(
+        'Não foi possível alterar',
+        getAuthErrorMessage(error, authProvider === 'google' ? 'google' : 'email'),
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -155,44 +180,116 @@ export default function TelaEdicaoPerfilResponsavel() {
 
             <View style={styles.fieldBlock}>
               <Text style={styles.label}>Data de Nascimento</Text>
-              <View style={styles.dateInputRow}>
-                <TextInput
-                  keyboardType="number-pad"
-                  maxLength={10}
-                  onChangeText={handleBirthChange}
-                  placeholder="dd/mm/aaaa"
-                  style={[styles.input, styles.dateInput]}
-                  value={profile.nascimento}
-                />
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={openCalendar}
-                  style={styles.calendarButton}>
-                  <Feather name="calendar" size={18} color="#0C4DFF" />
-                </TouchableOpacity>
-              </View>
+              <BirthDateInput
+                containerStyle={styles.profileDateInput}
+                onChangeText={(value) => updateProfile({ nascimento: value })}
+                value={profile.nascimento}
+              />
             </View>
 
-            <View style={styles.fieldBlock}>
-              <Text style={styles.label}>Email</Text>
+            <View style={[styles.fieldBlock, styles.emailFieldBlock]}>
+              <View style={styles.emailHeaderRow}>
+                <View style={styles.emailIconWrap}>
+                  <Feather name="mail" size={18} color="#0C4DFF" />
+                </View>
+                <View style={styles.emailHeaderText}>
+                  <Text style={styles.emailLabel}>E-mail de acesso</Text>
+                  <Text style={styles.emailHint}>
+                    {authProvider === 'google'
+                      ? 'Conta Google: crie uma senha se quiser entrar com o novo e-mail.'
+                      : 'Para trocar, informe sua senha atual abaixo.'}
+                  </Text>
+                </View>
+              </View>
               <TextInput
                 autoCapitalize="none"
                 keyboardType="email-address"
-                onChangeText={(value) => updateProfile({ email: value })}
-                style={styles.input}
-                value={profile.email}
+                onChangeText={(value) => {
+                  setPendingEmail(value);
+                  if (formError) {
+                    setFormError('');
+                  }
+                  if (value.trim().toLowerCase() === profile.email.trim().toLowerCase()) {
+                    setNewPassword('');
+                    setConfirmNewPassword('');
+                  }
+                }}
+                placeholder="seuemail@exemplo.com"
+                placeholderTextColor="#7A86A8"
+                style={[styles.input, styles.emailInput]}
+                value={pendingEmail}
               />
             </View>
 
-            <View style={styles.fieldBlock}>
-              <Text style={styles.label}>Senha</Text>
-              <TextInput
-                onChangeText={(value) => updateProfile({ senha: value })}
-                secureTextEntry
-                style={styles.input}
-                value={profile.senha}
-              />
-            </View>
+            {shouldAskCurrentPassword ? (
+              <View style={styles.fieldBlock}>
+                <Text style={styles.label}>Senha atual para alterar e-mail</Text>
+                <TextInput
+                  onChangeText={(value) => {
+                    setCurrentPassword(value);
+                    if (formError) {
+                      setFormError('');
+                    }
+                  }}
+                  placeholder="Digite sua senha atual"
+                  placeholderTextColor="#777777"
+                  secureTextEntry
+                  style={styles.input}
+                  value={currentPassword}
+                />
+              </View>
+            ) : shouldCreatePassword ? (
+              <View style={styles.passwordSetupBox}>
+                <View style={styles.passwordSetupHeader}>
+                  <Feather name="key" size={16} color="#0C4DFF" />
+                  <Text style={styles.passwordSetupTitle}>Crie uma senha para o novo acesso</Text>
+                </View>
+                <Text style={styles.passwordSetupText}>
+                  Depois de confirmar o link enviado ao novo e-mail, voce podera entrar usando esse
+                  e-mail e esta senha.
+                </Text>
+                <TextInput
+                  onChangeText={(value) => {
+                    setNewPassword(value);
+                    if (formError) {
+                      setFormError('');
+                    }
+                  }}
+                  placeholder="Nova senha (min. 6 caracteres)"
+                  placeholderTextColor="#777777"
+                  secureTextEntry
+                  style={[styles.input, styles.passwordInput]}
+                  value={newPassword}
+                />
+                <TextInput
+                  onChangeText={(value) => {
+                    setConfirmNewPassword(value);
+                    if (formError) {
+                      setFormError('');
+                    }
+                  }}
+                  placeholder="Confirmar nova senha"
+                  placeholderTextColor="#777777"
+                  secureTextEntry
+                  style={styles.input}
+                  value={confirmNewPassword}
+                />
+              </View>
+            ) : (
+              <View style={styles.googleNotice}>
+                <Feather name="info" size={16} color="#0C4DFF" />
+                <Text style={styles.googleNoticeText}>
+                  Esta conta entrou com Google. Ao trocar o e-mail, a tela vai pedir uma senha para
+                  o novo acesso.
+                </Text>
+              </View>
+            )}
+
+            {formError ? (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{formError}</Text>
+              </View>
+            ) : null}
           </View>
 
           <TouchableOpacity
@@ -246,7 +343,11 @@ export default function TelaEdicaoPerfilResponsavel() {
             </View>
             <Text style={styles.modalTitle}>Confirmar alterações</Text>
             <Text style={styles.modalText}>
-              Tem certeza que deseja confirmar as alterações feitas no perfil?
+              {pendingEmail.trim().toLowerCase() !== profile.email.trim().toLowerCase()
+                ? authProvider === 'google'
+                  ? 'Vamos criar sua senha de acesso e enviar um link para o novo e-mail. A troca só termina quando você clicar nesse link.'
+                  : 'Vamos enviar um link para o novo e-mail. A troca só será concluída depois que você clicar nesse link.'
+                : 'Tem certeza que deseja confirmar as alterações feitas no perfil?'}
             </Text>
 
             <View style={styles.modalActions}>
@@ -260,8 +361,11 @@ export default function TelaEdicaoPerfilResponsavel() {
               <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={handleProceed}
+                disabled={isSubmitting}
                 style={styles.modalPrimaryButton}>
-                <Text style={styles.modalPrimaryText}>Confirmar</Text>
+                <Text style={styles.modalPrimaryText}>
+                  {isSubmitting ? 'Enviando...' : 'Confirmar'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -271,30 +375,32 @@ export default function TelaEdicaoPerfilResponsavel() {
       <Modal
         animationType="fade"
         transparent
-        visible={showDatePicker}
-        onRequestClose={() => setShowDatePicker(false)}>
+        visible={showEmailSentModal}
+        onRequestClose={() => setShowEmailSentModal(false)}>
         <View style={styles.modalOverlay}>
-          <Pressable style={styles.modalBackdrop} onPress={() => setShowDatePicker(false)} />
-          <View style={styles.calendarCard}>
-            <Text style={styles.calendarTitle}>Selecione sua data de nascimento</Text>
-
-            <DateTimePicker
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              maximumDate={new Date()}
-              mode="date"
-              onChange={handleDateChange}
-              value={parseDateString(profile.nascimento) ?? new Date(2000, 0, 1)}
-            />
+          <View style={styles.modalCard}>
+            <View style={styles.modalIconWrap}>
+              <Feather name="mail" size={24} color="#0C4DFF" />
+            </View>
+            <Text style={styles.modalTitle}>Confirme o novo e-mail</Text>
+            <Text style={styles.modalText}>
+              Enviamos um link para {pendingEmail.trim().toLowerCase()}. Abra esse e-mail e clique
+              no link para concluir a alteração.
+            </Text>
 
             <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => setShowDatePicker(false)}
-              style={styles.calendarCloseButton}>
-              <Text style={styles.calendarCloseText}>Fechar</Text>
+              activeOpacity={0.85}
+              onPress={() => {
+                setShowEmailSentModal(false);
+                router.push('./tela_editar_perfil_responsavel');
+              }}
+              style={styles.singleModalButton}>
+              <Text style={styles.modalPrimaryText}>Entendi</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
+
     </SafeAreaView>
   );
 }
@@ -357,6 +463,113 @@ const styles = StyleSheet.create({
   fieldBlock: {
     marginBottom: 6,
   },
+  emailFieldBlock: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#9DBBFF',
+    backgroundColor: '#EEF4FF',
+    paddingHorizontal: 10,
+    paddingTop: 10,
+    paddingBottom: 12,
+    marginTop: 4,
+    marginBottom: 10,
+  },
+  emailHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+  emailIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emailHeaderText: {
+    flex: 1,
+  },
+  emailLabel: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0B2F86',
+  },
+  emailHint: {
+    marginTop: 2,
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#304A7A',
+  },
+  emailInput: {
+    borderColor: '#0C4DFF',
+    borderWidth: 1.5,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  googleNotice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    borderRadius: 12,
+    backgroundColor: '#EDF4FF',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 8,
+  },
+  googleNoticeText: {
+    flex: 1,
+    color: '#26466F',
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '600',
+  },
+  passwordSetupBox: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#B7CCFF',
+    backgroundColor: '#F5F8FF',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    marginBottom: 8,
+  },
+  passwordSetupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  passwordSetupTitle: {
+    flex: 1,
+    color: '#0B2F86',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  passwordSetupText: {
+    color: '#304A7A',
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  passwordInput: {
+    marginBottom: 8,
+  },
+  errorBox: {
+    borderRadius: 12,
+    backgroundColor: '#FFE5E5',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 4,
+  },
+  errorText: {
+    color: '#B42318',
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   label: {
     fontSize: 12,
     color: '#3A3A3A',
@@ -374,23 +587,9 @@ const styles = StyleSheet.create({
     color: '#111111',
     textAlignVertical: 'center',
   },
-  dateInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  dateInput: {
-    flex: 1,
-  },
-  calendarButton: {
-    width: 44,
+  profileDateInput: {
     minHeight: 44,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#CFE0FF',
-    backgroundColor: '#EFF5FF',
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginBottom: 0,
   },
   confirmButton: {
     alignSelf: 'center',
@@ -519,43 +718,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#0C4DFF',
   },
-  modalPrimaryText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  calendarCard: {
-    width: '100%',
-    maxWidth: 340,
-    borderRadius: 24,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 18,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 18,
-    elevation: 8,
-  },
-  calendarTitle: {
-    fontSize: 19,
-    fontWeight: '800',
-    color: '#161616',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  calendarCloseButton: {
-    alignSelf: 'center',
-    minWidth: 120,
-    minHeight: 44,
+  singleModalButton: {
+    minWidth: 150,
+    minHeight: 46,
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#0C4DFF',
     paddingHorizontal: 18,
   },
-  calendarCloseText: {
+  modalPrimaryText: {
     fontSize: 15,
     fontWeight: '700',
     color: '#FFFFFF',

@@ -14,8 +14,8 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import axios from 'axios';
-import api from '@/app/services/api';
+import { useIdosoProfile } from '@/contexts/idoso-profile-context';
+import { getAuthErrorMessage, loginIdosoFirebase } from '@/lib/firebase-auth-service';
 
 export default function TelaLoginIdoso() {
   const [cpf, setCpf] = React.useState('');
@@ -25,6 +25,7 @@ export default function TelaLoginIdoso() {
   const [showErrorModal, setShowErrorModal] = React.useState(false);
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { setProfile } = useIdosoProfile();
 
   const formatCpf = (value: string) => {
     const digits = value.replace(/\D/g, '').slice(0, 11);
@@ -76,21 +77,19 @@ export default function TelaLoginIdoso() {
       setShowErrorModal(false);
       setIsSubmitting(true);
 
-      await api.post('/auth/idoso/login', {
-        cpf,
-        senha,
+      const user = await loginIdosoFirebase(cpf.trim(), senha);
+      setProfile({
+        uid: user.uid,
+        nome: user.nome,
+        cpf: user.cpf,
+        dataNascimento: user.dataNascimento,
+        fotoPerfil: user.fotoPerfil,
+        responsavelId: user.responsavelId,
       });
 
       setShowSuccessModal(true);
     } catch (error) {
-      const message = axios.isAxiosError(error)
-        ? error.response?.data?.error ??
-          (error.request
-            ? 'Não foi possível conectar ao servidor. Verifique se o backend está ligado.'
-            : 'Não foi possível fazer login agora.')
-        : 'Não foi possível fazer login agora.';
-
-      openErrorModal('Erro no login', message);
+      openErrorModal('Erro no login', getAuthErrorMessage(error, 'email'));
     } finally {
       setIsSubmitting(false);
     }

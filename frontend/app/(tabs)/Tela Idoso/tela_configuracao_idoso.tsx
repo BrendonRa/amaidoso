@@ -1,7 +1,11 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { signOut } from 'firebase/auth';
 import React from 'react';
 import { Animated, Modal, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import { useIdosoProfile } from '@/contexts/idoso-profile-context';
+import { getFirebaseAuth } from '@/lib/firebase';
 import IdosoBottomNav from './IdosoBottomNav';
 
 export default function TelaConfiguracaoIdoso() {
@@ -9,6 +13,7 @@ export default function TelaConfiguracaoIdoso() {
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
   const [showEditWarning, setShowEditWarning] = React.useState(false);
   const thumbAnim = React.useRef(new Animated.Value(1)).current;
+  const { profile, clearProfile } = useIdosoProfile();
 
   React.useEffect(() => {
     Animated.timing(thumbAnim, {
@@ -30,8 +35,14 @@ export default function TelaConfiguracaoIdoso() {
     setNotificationsEnabled((prev) => !prev);
   };
 
-  const handleConfirmLogout = () => {
+  const handleConfirmLogout = async () => {
     setShowLogoutModal(false);
+    try {
+      await signOut(getFirebaseAuth());
+    } catch {
+      // segue fluxo
+    }
+    clearProfile();
     router.push('./tela_inicio1');
   };
 
@@ -39,6 +50,15 @@ export default function TelaConfiguracaoIdoso() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <Text style={styles.title}>DEFINIÇÕES</Text>
+        {profile ? (
+          <View style={styles.profileSummary}>
+            <Ionicons name="person-circle-outline" size={42} color="#F58220" />
+            <View style={styles.profileSummaryText}>
+              <Text style={styles.profileName}>{profile.nome || 'Idoso'}</Text>
+              <Text style={styles.profileCpf}>CPF: {profile.cpf}</Text>
+            </View>
+          </View>
+        ) : null}
 
         <View style={styles.list}>
           <TouchableOpacity activeOpacity={0.6} onPress={handleEditProfile} style={styles.itemCard}>
@@ -181,6 +201,29 @@ const styles = StyleSheet.create({
   list: {
     flex: 1,
     paddingHorizontal: 14,
+  },
+  profileSummary: {
+    marginHorizontal: 14,
+    marginBottom: 18,
+    borderRadius: 16,
+    backgroundColor: '#FFF3E8',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: 12,
+  },
+  profileSummaryText: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#1D1D1D',
+  },
+  profileCpf: {
+    marginTop: 2,
+    fontSize: 13,
+    color: '#5C5C5C',
   },
   itemCard: {
     minHeight: 54,

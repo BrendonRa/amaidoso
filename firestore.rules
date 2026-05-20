@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /responsaveis/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /idosos/{idosoId} {
+      allow read: if request.auth != null && (
+        request.auth.uid == idosoId || resource.data.responsavelId == request.auth.uid
+      );
+      allow create: if request.auth != null
+        && request.resource.data.responsavelId == request.auth.uid;
+      allow update, delete: if request.auth != null && (
+        request.auth.uid == idosoId || resource.data.responsavelId == request.auth.uid
+      );
+
+      match /lembretes/{lembreteId} {
+        allow read: if request.auth != null && (
+          request.auth.uid == idosoId ||
+          get(/databases/$(database)/documents/idosos/$(idosoId)).data.responsavelId == request.auth.uid
+        );
+        allow create, update, delete: if request.auth != null
+          && get(/databases/$(database)/documents/idosos/$(idosoId)).data.responsavelId == request.auth.uid;
+      }
+
+      match /medicacoes/{medicacaoId} {
+        allow read: if request.auth != null && (
+          request.auth.uid == idosoId ||
+          get(/databases/$(database)/documents/idosos/$(idosoId)).data.responsavelId == request.auth.uid
+        );
+        allow create, delete: if request.auth != null
+          && get(/databases/$(database)/documents/idosos/$(idosoId)).data.responsavelId == request.auth.uid;
+        allow update: if request.auth != null && (
+          request.auth.uid == idosoId ||
+          get(/databases/$(database)/documents/idosos/$(idosoId)).data.responsavelId == request.auth.uid
+        );
+      }
+
+      match /anotacoes/{anotacaoId} {
+        allow read: if request.auth != null && (
+          request.auth.uid == idosoId ||
+          get(/databases/$(database)/documents/idosos/$(idosoId)).data.responsavelId == request.auth.uid
+        );
+        allow create: if request.auth != null && request.auth.uid == idosoId;
+        allow update, delete: if request.auth != null && (
+          request.auth.uid == resource.data.createdBy ||
+          get(/databases/$(database)/documents/idosos/$(idosoId)).data.responsavelId == request.auth.uid
+        );
+      }
+    }
+  }
+}

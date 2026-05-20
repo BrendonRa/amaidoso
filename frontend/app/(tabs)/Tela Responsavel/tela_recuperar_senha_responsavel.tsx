@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
 import React from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -14,18 +15,40 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getAuthErrorMessage, sendResponsavelPasswordResetEmail } from '@/lib/firebase-auth-service';
 
 export default function TelaRecuperarSenhaResponsavel() {
   const [email, setEmail] = React.useState('');
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const handleSendLink = () => {
-    setShowSuccessModal(true);
+  const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+  const handleSendLink = async () => {
+    const normalized = email.trim().toLowerCase();
+    if (!normalized) {
+      Alert.alert('E-mail', 'Informe o e-mail da sua conta.');
+      return;
+    }
+    if (!isValidEmail(normalized)) {
+      Alert.alert('E-mail inválido', 'Digite um e-mail válido.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await sendResponsavelPasswordResetEmail(normalized);
+      setShowSuccessModal(true);
+    } catch (error) {
+      Alert.alert('Não foi possível enviar', getAuthErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleContinue = () => {
     setShowSuccessModal(false);
-    router.push('./tela_recuperar_senha_codigo_responsavel');
+    router.replace('./tela_login_responsavel');
   };
 
   return (
@@ -48,7 +71,8 @@ export default function TelaRecuperarSenhaResponsavel() {
 
           <Text style={styles.title}>Recupere sua Senha</Text>
           <Text style={styles.subtitle}>
-            Informe seu email para que{'\n'}possamos enviar um link para a{'\n'}redefinição da senha
+            Informe o e-mail da conta. Você receberá um e-mail do Firebase com um link para criar uma
+            nova senha (abra o link no navegador).
           </Text>
 
           <View style={styles.form}>
@@ -62,13 +86,17 @@ export default function TelaRecuperarSenhaResponsavel() {
               value={email}
             />
 
-            <TouchableOpacity activeOpacity={0.6} onPress={handleSendLink} style={styles.buttonWrapper}>
+            <TouchableOpacity
+              activeOpacity={0.6}
+              disabled={isSubmitting}
+              onPress={() => void handleSendLink()}
+              style={styles.buttonWrapper}>
               <LinearGradient
                 colors={['#2E6BFF', '#0047FF']}
                 end={{ x: 1, y: 0.5 }}
                 start={{ x: 0, y: 0.5 }}
                 style={styles.button}>
-                <Text style={styles.buttonText}>Enviar Link</Text>
+                <Text style={styles.buttonText}>{isSubmitting ? 'Enviando...' : 'Enviar link'}</Text>
               </LinearGradient>
             </TouchableOpacity>
 
@@ -96,17 +124,18 @@ export default function TelaRecuperarSenhaResponsavel() {
             <View style={styles.modalIconWrap}>
               <Text style={styles.modalIcon}>@</Text>
             </View>
-            <Text style={styles.modalTitle}>Link enviado</Text>
+            <Text style={styles.modalTitle}>E-mail enviado</Text>
             <Text style={styles.modalText}>
-              Enviamos as instrucoes para o seu email. Agora voce ira para a tela onde pode inserir
-              o codigo recebido para redefinir sua senha.
+              Se existir uma conta com esse e-mail, o Firebase enviou uma mensagem com um link seguro.
+              Abra o e-mail, clique no link e defina a nova senha no navegador. Depois volte ao app e
+              entre com a nova senha.
             </Text>
 
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleContinue}
               style={styles.modalButton}>
-              <Text style={styles.modalButtonText}>Continuar</Text>
+              <Text style={styles.modalButtonText}>Ir para o login</Text>
             </TouchableOpacity>
           </View>
         </View>

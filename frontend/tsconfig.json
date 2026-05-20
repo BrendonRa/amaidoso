@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
     }
   },
-  "extends": "expo/tsconfig.base"
+  "exclude": ["dist", "node_modules"],
+  "extends": "expo/tsconfig.base.json"
 }

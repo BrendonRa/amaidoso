@@ -16,24 +16,23 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+In the output, you will find options to open the app in a development build, Android emulator, iOS simulator, or Expo Go.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Firebase
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+The app loads Firebase from `google-services.json` in the frontend root and initializes in `app/_layout.tsx`. Enable Authentication and Firestore in the Firebase console and set security rules before production use.
 
-## Get a fresh project
+### Login after migration
 
-When you're ready, run:
+The email/password login uses Firebase Authentication (`signInWithEmailAndPassword`). A user document in Firestore is not enough to log in: the same account must exist in **Authentication → Users** with the Email/Password provider enabled in **Authentication → Sign-in method**.
 
-```bash
-npm run reset-project
+For elderly users, the CPF login is converted to a synthetic Firebase Auth email:
+
+```txt
+idoso_00000000000@amaidoso-cpf.com
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+When migrating existing data, create/import those Auth users with that exact email format and the password, then keep the profile data in the `idosos` collection using the Auth UID as the document id.
 
 ## Learn more
 

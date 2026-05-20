@@ -14,9 +14,15 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import axios from 'axios';
-import api from '@/app/services/api';
+import { ResponsavelGoogleSignInButton } from '@/components/responsavel-google-sign-in-button';
 import { useResponsavelProfile } from '@/contexts/responsavel-profile-context';
+import {
+  getAuthErrorMessage,
+  loginResponsavelFirebase,
+  resendResponsavelEmailVerification,
+} from '@/lib/firebase-auth-service';
+
+const RESEND_COOLDOWN_SECONDS = 35;
 
 export default function HomeScreen() {
   const [email, setEmail] = React.useState('');
@@ -26,14 +32,32 @@ export default function HomeScreen() {
   const [showErrorModal, setShowErrorModal] = React.useState(false);
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [canResendVerification, setCanResendVerification] = React.useState(false);
+  const [resendCooldown, setResendCooldown] = React.useState(0);
+  const [isResendingVerification, setIsResendingVerification] = React.useState(false);
+  const [resendFeedback, setResendFeedback] = React.useState('');
   const { updateProfile } = useResponsavelProfile();
 
   const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  const openErrorModal = (title: string, message: string) => {
+  const openErrorModal = (title: string, message: string, allowResend = false) => {
     setErrorTitle(title);
     setErrorMessage(message);
+    setCanResendVerification(allowResend);
+    setResendFeedback('');
     setShowErrorModal(true);
   };
+
+  React.useEffect(() => {
+    if (!showErrorModal || !canResendVerification || resendCooldown <= 0) {
+      return undefined;
+    }
+
+    const id = setTimeout(() => {
+      setResendCooldown((current) => Math.max(0, current - 1));
+    }, 1000);
+
+    return () => clearTimeout(id);
+  }, [canResendVerification, resendCooldown, showErrorModal]);
 
   const handleLogin = async () => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -41,6 +65,11 @@ export default function HomeScreen() {
     if (!normalizedEmail || !password) {
       const message = 'Preencha email e senha para continuar.';
       openErrorModal('Campos obrigatórios', message);
+      return;
+    }
+
+    if (password.length < 6) {
+      openErrorModal('Senha', 'A senha deve ter pelo menos 6 caracteres (Firebase).');
       return;
     }
 
@@ -55,32 +84,58 @@ export default function HomeScreen() {
       setShowErrorModal(false);
       setIsSubmitting(true);
 
-      const response = await api.post('/auth/responsavel/login', {
-        email: normalizedEmail,
-        senha: password,
-      });
-
-      const user = response.data.user;
+      const user = await loginResponsavelFirebase(normalizedEmail, password);
 
       updateProfile({
         nome: user.nome,
         usuario: user.nome,
         email: user.email,
         photoUri: user.fotoPerfil ?? null,
+        authProvider: 'password',
       });
 
       setShowSuccessModal(true);
     } catch (error) {
-      const message = axios.isAxiosError(error)
-        ? error.response?.data?.error ??
-          (error.request
-            ? 'Não foi possível conectar ao servidor. Verifique se o backend está ligado.'
-            : 'Não foi possível fazer login agora.')
-        : 'Não foi possível fazer login agora.';
-
-      openErrorModal('Erro no login', message);
+      const isEmailNotVerified =
+        error && typeof error === 'object' && 'code' in error
+          ? String((error as { code: string }).code) === 'EMAIL_NOT_VERIFIED'
+          : false;
+      if (isEmailNotVerified) {
+        setResendCooldown(RESEND_COOLDOWN_SECONDS);
+      }
+      openErrorModal('Erro no login', getAuthErrorMessage(error, 'email'), isEmailNotVerified);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail || !password) {
+      openErrorModal(
+        'Campos obrigatórios',
+        'Preencha email e senha para reenviar o link de confirmação.',
+        true,
+      );
+      return;
+    }
+
+    if (resendCooldown > 0 || isResendingVerification) {
+      return;
+    }
+
+    try {
+      setIsResendingVerification(true);
+      setResendFeedback('');
+      await resendResponsavelEmailVerification(normalizedEmail, password);
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
+      setResendFeedback('Novo link enviado. Confira sua caixa de entrada e o spam.');
+    } catch (error) {
+      setResendFeedback('');
+      openErrorModal('Não foi possível reenviar', getAuthErrorMessage(error, 'email'), true);
+    } finally {
+      setIsResendingVerification(false);
     }
   };
 
@@ -121,6 +176,7 @@ export default function HomeScreen() {
                 if (showErrorModal) {
                   setShowErrorModal(false);
                 }
+                setCanResendVerification(false);
               }}
               placeholder="Email"
               placeholderTextColor="#737373"
@@ -134,6 +190,7 @@ export default function HomeScreen() {
                 if (showErrorModal) {
                   setShowErrorModal(false);
                 }
+                setCanResendVerification(false);
               }}
               placeholder="Senha"
               placeholderTextColor="#737373"
@@ -169,6 +226,30 @@ export default function HomeScreen() {
               </LinearGradient>
             </TouchableOpacity>
 
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>ou</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <ResponsavelGoogleSignInButton
+              disabled={isSubmitting}
+              onBusyChange={setIsSubmitting}
+              onError={(message) => openErrorModal('Google', message)}
+              onSuccess={(user) => {
+                setErrorMessage('');
+                setShowErrorModal(false);
+                updateProfile({
+                  nome: user.nome,
+                  usuario: user.nome,
+                  email: user.email,
+                  photoUri: user.fotoPerfil ?? null,
+                  authProvider: 'google',
+                });
+                setShowSuccessModal(true);
+              }}
+            />
+
             <View style={styles.signupRow}>
               <Text style={styles.signupText}>Não possui uma conta?</Text>
               <TouchableOpacity
@@ -195,6 +276,28 @@ export default function HomeScreen() {
             </View>
             <Text style={styles.modalTitle}>{errorTitle}</Text>
             <Text style={styles.modalText}>{errorMessage}</Text>
+
+            {resendFeedback ? <Text style={styles.resendFeedback}>{resendFeedback}</Text> : null}
+
+            {canResendVerification ? (
+              <TouchableOpacity
+                activeOpacity={0.75}
+                disabled={resendCooldown > 0 || isResendingVerification}
+                onPress={handleResendVerification}
+                style={[
+                  styles.modalResendButton,
+                  (resendCooldown > 0 || isResendingVerification) &&
+                    styles.modalResendButtonDisabled,
+                ]}>
+                <Text style={styles.modalResendButtonText}>
+                  {isResendingVerification
+                    ? 'Reenviando...'
+                    : resendCooldown > 0
+                      ? `Reenviar link em ${resendCooldown}s`
+                      : 'Reenviar link'}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
 
             <TouchableOpacity
               activeOpacity={0.85}
@@ -342,6 +445,26 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 8,
+    gap: 10,
+    width: '100%',
+    maxWidth: 320,
+    alignSelf: 'center',
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#D0D0D0',
+  },
+  dividerText: {
+    fontSize: 13,
+    color: '#666',
+    fontWeight: '600',
+  },
   signupRow: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -427,6 +550,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
+  resendFeedback: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: '#0C4DFF',
+    textAlign: 'center',
+    marginTop: -8,
+    marginBottom: 14,
+  },
   modalButton: {
     minWidth: 150,
     minHeight: 46,
@@ -444,6 +575,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#D92D20',
     paddingHorizontal: 18,
+  },
+  modalResendButton: {
+    width: '100%',
+    minHeight: 46,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EEF3FF',
+    paddingHorizontal: 18,
+    marginTop: -4,
+    marginBottom: 12,
+  },
+  modalResendButtonDisabled: {
+    opacity: 0.58,
+  },
+  modalResendButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0C4DFF',
   },
   modalButtonText: {
     fontSize: 15,

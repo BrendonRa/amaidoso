@@ -15,6 +15,7 @@ export default function TelaResponsavelLayout() {
       <Stack.Screen name="tela_recuperar_senha_codigo_responsavel" />
       <Stack.Screen name="tela_home_responsavel" />
       <Stack.Screen name="tela_painel_responsavel" />
+      <Stack.Screen name="tela_detalhes_idoso_responsavel" />
       <Stack.Screen name="tela_config_responsavel" />
       <Stack.Screen name="tela_editar_perfil_responsavel" />
       <Stack.Screen name="tela_edicao_perfil_responsavel" />

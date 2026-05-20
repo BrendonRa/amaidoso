@@ -15,6 +15,7 @@ export default function TabLayout() {
       <Stack.Screen name="tela_login_idoso" />
       <Stack.Screen name="tela_lembretes" />
       <Stack.Screen name="tela_medicacao" />
+      <Stack.Screen name="tela_anotacoes" />
       <Stack.Screen name="Tela_Principal" />
       <Stack.Screen name="tela_principal_idoso" />
       <Stack.Screen name="Tutorial_1" />
@@ -23,7 +24,6 @@ export default function TabLayout() {
       <Stack.Screen name="tutorial_3" />
       <Stack.Screen name="tutorial_final" />
       <Stack.Screen name="tela_tutorial_idoso" />
-      <Stack.Screen name="explore" />
       <Stack.Screen name="tela_configuracao_idoso" />
     </Stack>
   );

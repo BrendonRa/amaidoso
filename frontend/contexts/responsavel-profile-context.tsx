@@ -1,5 +1,7 @@
 import React from 'react';
 
+import type { ResponsavelAuthProvider } from '@/lib/firebase-auth-service';
+
 type ResponsavelProfile = {
   nome: string;
   usuario: string;
@@ -7,6 +9,7 @@ type ResponsavelProfile = {
   email: string;
   senha: string;
   photoUri: string | null;
+  authProvider: ResponsavelAuthProvider;
 };
 
 type ResponsavelProfileContextValue = {
@@ -22,6 +25,7 @@ const initialProfile: ResponsavelProfile = {
   email: 'fulanosilva2002@gmail.com',
   senha: 'A12345678!',
   photoUri: null,
+  authProvider: 'unknown',
 };
 
 const ResponsavelProfileContext = React.createContext<ResponsavelProfileContextValue | undefined>(

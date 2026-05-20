@@ -1,7 +1,10 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { signOut } from 'firebase/auth';
 import React from 'react';
 import { Animated, Image, Modal, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+import { getFirebaseAuth } from '@/lib/firebase';
 
 export default function TelaConfigResponsavel() {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
@@ -24,8 +27,13 @@ export default function TelaConfigResponsavel() {
     setShowLogoutModal(true);
   };
 
-  const handleConfirmLogout = () => {
+  const handleConfirmLogout = async () => {
     setShowLogoutModal(false);
+    try {
+      await signOut(getFirebaseAuth());
+    } catch {
+      // continua fluxo de saída mesmo se signOut falhar
+    }
     router.push('../Tela Idoso/tela_inicio1');
   };
 

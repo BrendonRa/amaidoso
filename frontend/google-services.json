@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "29887422062",
+    "project_id": "amaidoso-fcf62",
+    "storage_bucket": "amaidoso-fcf62.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:29887422062:android:b987f03fef3655f2db907f",
+        "android_client_info": {
+          "package_name": "com.amaidoso.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "29887422062-b6c7hjlqbbbbka8f8fn5lnd9ns4ald40.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCv2bM2rSwZjZQfMn3jcQfrnKCvFb0nC64"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "29887422062-b6c7hjlqbbbbka8f8fn5lnd9ns4ald40.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
