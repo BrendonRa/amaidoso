@@ -1,7 +1,12 @@
 import { Feather } from '@expo/vector-icons';
+import DateTimePicker, {
+  DateTimePickerAndroid,
+  type DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import React from 'react';
 import {
   Modal,
+  Platform,
   Pressable,
   StyleProp,
   StyleSheet,
@@ -26,7 +31,7 @@ export function parseDateDisplay(value: string) {
   const day = Number(match[1]);
   const month = Number(match[2]) - 1;
   const year = Number(match[3]);
-  const date = new Date(year, month, day);
+  const date = new Date(year, month, day, 12);
 
   if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) {
     return null;
@@ -54,64 +59,18 @@ export function displayDateToStorage(value: string) {
   return formatDateForStorage(date);
 }
 
-const monthNames = [
-  'Janeiro',
-  'Fevereiro',
-  'Março',
-  'Abril',
-  'Maio',
-  'Junho',
-  'Julho',
-  'Agosto',
-  'Setembro',
-  'Outubro',
-  'Novembro',
-  'Dezembro',
-];
+const MIN_BIRTH_DATE = new Date(1900, 0, 1, 12);
+const DEFAULT_BIRTH_DATE = new Date(1950, 0, 1, 12);
 
-const weekDays = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
-
-function getMonthStart(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), 1);
-}
-
-function addMonths(date: Date, amount: number) {
-  return new Date(date.getFullYear(), date.getMonth() + amount, 1);
-}
-
-function isSameDate(first: Date, second: Date) {
-  return (
-    first.getFullYear() === second.getFullYear() &&
-    first.getMonth() === second.getMonth() &&
-    first.getDate() === second.getDate()
-  );
-}
-
-function isFutureDate(date: Date) {
+function getTodayDate() {
   const today = new Date();
-  const normalizedToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  return normalizedDate > normalizedToday;
+  return new Date(today.getFullYear(), today.getMonth(), today.getDate(), 12);
 }
 
-function getCalendarDays(monthDate: Date) {
-  const firstDay = getMonthStart(monthDate);
-  const daysInMonth = new Date(firstDay.getFullYear(), firstDay.getMonth() + 1, 0).getDate();
-  const days: Array<Date | null> = [];
-
-  for (let index = 0; index < firstDay.getDay(); index += 1) {
-    days.push(null);
-  }
-
-  for (let day = 1; day <= daysInMonth; day += 1) {
-    days.push(new Date(firstDay.getFullYear(), firstDay.getMonth(), day));
-  }
-
-  while (days.length % 7 !== 0) {
-    days.push(null);
-  }
-
-  return days;
+function clampDate(date: Date, minimumDate: Date, maximumDate: Date) {
+  if (date < minimumDate) return minimumDate;
+  if (date > maximumDate) return maximumDate;
+  return date;
 }
 
 type BirthDateInputProps = {
@@ -127,16 +86,21 @@ export function BirthDateInput({
   placeholder = 'dd/mm/aaaa',
   containerStyle,
 }: BirthDateInputProps) {
-  const [showCalendar, setShowCalendar] = React.useState(false);
-  const selectedDate = parseDateDisplay(value);
-  const [calendarMonth, setCalendarMonth] = React.useState(() =>
-    getMonthStart(selectedDate ?? new Date(1950, 0, 1)),
+  const selectedDate = React.useMemo(() => parseDateDisplay(value), [value]);
+  const maximumBirthDate = React.useMemo(() => getTodayDate(), []);
+  const [showDatePicker, setShowDatePicker] = React.useState(false);
+  const [pickerDate, setPickerDate] = React.useState(() =>
+    clampDate(selectedDate ?? DEFAULT_BIRTH_DATE, MIN_BIRTH_DATE, maximumBirthDate),
   );
-  const calendarDays = React.useMemo(() => getCalendarDays(calendarMonth), [calendarMonth]);
-  const calendarTitle = `${monthNames[calendarMonth.getMonth()]} ${calendarMonth.getFullYear()}`;
-  const currentMonthStart = getMonthStart(new Date());
-  const canGoNextMonth = addMonths(calendarMonth, 1) <= currentMonthStart;
-  const canGoNextYear = addMonths(calendarMonth, 12) <= currentMonthStart;
+
+  React.useEffect(() => {
+    if (selectedDate) {
+      const clampedDate = clampDate(selectedDate, MIN_BIRTH_DATE, maximumBirthDate);
+      setPickerDate((currentDate) =>
+        currentDate.getTime() === clampedDate.getTime() ? currentDate : clampedDate,
+      );
+    }
+  }, [maximumBirthDate, selectedDate]);
 
   const handleInputChange = (text: string) => {
     const digitsOnly = text.replace(/\D/g, '').slice(0, 8);
@@ -153,16 +117,41 @@ export function BirthDateInput({
     onChangeText(maskedValue);
   };
 
-  const openCalendar = () => {
-    setCalendarMonth(getMonthStart(selectedDate ?? new Date(1950, 0, 1)));
-    setShowCalendar(true);
+  const handlePickerChange = (event: DateTimePickerEvent, date?: Date) => {
+    if (event.type === 'neutralButtonPressed') {
+      onChangeText('');
+      return;
+    }
+
+    if (event.type === 'set' && date) {
+      onChangeText(formatDateDisplay(date));
+    }
   };
 
-  const selectDate = (date: Date) => {
-    if (isFutureDate(date)) return;
+  const openDatePicker = () => {
+    const currentPickerDate = clampDate(
+      selectedDate ?? DEFAULT_BIRTH_DATE,
+      MIN_BIRTH_DATE,
+      maximumBirthDate,
+    );
+    setPickerDate(currentPickerDate);
 
-    onChangeText(formatDateDisplay(date));
-    setShowCalendar(false);
+    if (Platform.OS === 'android') {
+      DateTimePickerAndroid.open({
+        value: currentPickerDate,
+        mode: 'date',
+        display: 'calendar',
+        minimumDate: MIN_BIRTH_DATE,
+        maximumDate: maximumBirthDate,
+        positiveButton: { label: 'Definir' },
+        negativeButton: { label: 'Cancelar' },
+        neutralButton: { label: 'Limpar' },
+        onChange: handlePickerChange,
+      });
+      return;
+    }
+
+    setShowDatePicker(true);
   };
 
   return (
@@ -177,7 +166,10 @@ export function BirthDateInput({
           style={styles.dateInput}
           value={value}
         />
-        <TouchableOpacity activeOpacity={0.75} onPress={openCalendar} style={styles.calendarButton}>
+        <TouchableOpacity
+          activeOpacity={0.75}
+          onPress={openDatePicker}
+          style={styles.calendarButton}>
           <Feather name="calendar" size={18} color="#0C4DFF" />
         </TouchableOpacity>
       </View>
@@ -185,93 +177,50 @@ export function BirthDateInput({
       <Modal
         animationType="fade"
         transparent
-        visible={showCalendar}
-        onRequestClose={() => setShowCalendar(false)}>
+        visible={showDatePicker}
+        onRequestClose={() => setShowDatePicker(false)}>
         <View style={styles.modalOverlay}>
-          <Pressable style={styles.modalBackdrop} onPress={() => setShowCalendar(false)} />
-          <View style={styles.calendarCard}>
-            <Text style={styles.calendarTitle}>Data de nascimento</Text>
-
-            <View style={styles.calendarHeader}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowDatePicker(false)} />
+          <View style={styles.pickerCard}>
+            <Text style={styles.pickerTitle}>Data de nascimento</Text>
+            <DateTimePicker
+              value={pickerDate}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'inline' : 'default'}
+              minimumDate={MIN_BIRTH_DATE}
+              maximumDate={maximumBirthDate}
+              onChange={(_, date) => {
+                if (date) {
+                  setPickerDate(date);
+                }
+              }}
+            />
+            <View style={styles.pickerActions}>
               <TouchableOpacity
-                activeOpacity={0.75}
-                onPress={() => setCalendarMonth((current) => addMonths(current, -12))}
-                style={styles.calendarNavButton}>
-                <Feather name="chevrons-left" size={18} color="#0C4DFF" />
+                activeOpacity={0.8}
+                onPress={() => {
+                  onChangeText('');
+                  setShowDatePicker(false);
+                }}
+                style={styles.pickerActionButton}>
+                <Text style={styles.pickerActionText}>Limpar</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                activeOpacity={0.75}
-                onPress={() => setCalendarMonth((current) => addMonths(current, -1))}
-                style={styles.calendarNavButton}>
-                <Feather name="chevron-left" size={18} color="#0C4DFF" />
-              </TouchableOpacity>
-              <Text style={styles.calendarMonthText}>{calendarTitle}</Text>
-              <TouchableOpacity
-                activeOpacity={0.75}
-                disabled={!canGoNextMonth}
-                onPress={() => setCalendarMonth((current) => addMonths(current, 1))}
-                style={[styles.calendarNavButton, !canGoNextMonth && styles.calendarNavDisabled]}>
-                <Feather
-                  name="chevron-right"
-                  size={18}
-                  color={canGoNextMonth ? '#0C4DFF' : '#9AA6C0'}
-                />
+                activeOpacity={0.8}
+                onPress={() => setShowDatePicker(false)}
+                style={styles.pickerActionButton}>
+                <Text style={styles.pickerActionText}>Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                activeOpacity={0.75}
-                disabled={!canGoNextYear}
-                onPress={() => setCalendarMonth((current) => addMonths(current, 12))}
-                style={[styles.calendarNavButton, !canGoNextYear && styles.calendarNavDisabled]}>
-                <Feather
-                  name="chevrons-right"
-                  size={18}
-                  color={canGoNextYear ? '#0C4DFF' : '#9AA6C0'}
-                />
+                activeOpacity={0.8}
+                onPress={() => {
+                  onChangeText(formatDateDisplay(pickerDate));
+                  setShowDatePicker(false);
+                }}
+                style={styles.pickerActionButton}>
+                <Text style={styles.pickerActionText}>Definir</Text>
               </TouchableOpacity>
             </View>
-
-            <View style={styles.weekRow}>
-              {weekDays.map((day, index) => (
-                <Text key={`${day}-${index}`} style={styles.weekDayText}>
-                  {day}
-                </Text>
-              ))}
-            </View>
-
-            <View style={styles.calendarGrid}>
-              {calendarDays.map((date, index) => {
-                const isSelected = date && selectedDate && isSameDate(date, selectedDate);
-                const isDisabled = !date || isFutureDate(date);
-
-                return (
-                  <Pressable
-                    key={date ? date.toISOString() : `empty-${index}`}
-                    disabled={isDisabled}
-                    onPress={() => date && selectDate(date)}
-                    style={[
-                      styles.calendarDayButton,
-                      isSelected && styles.calendarDaySelected,
-                      isDisabled && styles.calendarDayDisabled,
-                    ]}>
-                    <Text
-                      style={[
-                        styles.calendarDayText,
-                        isSelected && styles.calendarDaySelectedText,
-                        isDisabled && styles.calendarDayDisabledText,
-                      ]}>
-                      {date ? date.getDate() : ''}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => setShowCalendar(false)}
-              style={styles.calendarCloseButton}>
-              <Text style={styles.calendarCloseText}>Fechar</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -320,9 +269,9 @@ const styles = StyleSheet.create({
   modalBackdrop: {
     ...StyleSheet.absoluteFillObject,
   },
-  calendarCard: {
+  pickerCard: {
     width: '100%',
-    maxWidth: 340,
+    maxWidth: 360,
     borderRadius: 20,
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 18,
@@ -334,96 +283,29 @@ const styles = StyleSheet.create({
     shadowRadius: 18,
     elevation: 8,
   },
-  calendarTitle: {
+  pickerTitle: {
     fontSize: 18,
     fontWeight: '800',
     color: '#111111',
     textAlign: 'center',
     marginBottom: 14,
   },
-  calendarHeader: {
-    minHeight: 42,
+  pickerActions: {
+    minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    marginBottom: 12,
+    justifyContent: 'flex-end',
+    gap: 10,
+    marginTop: 12,
   },
-  calendarNavButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#CFE0FF',
-    backgroundColor: '#EFF5FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  calendarNavDisabled: {
-    backgroundColor: '#F3F5F9',
-    borderColor: '#E3E7F0',
-  },
-  calendarMonthText: {
-    flex: 1,
-    minWidth: 98,
-    color: '#14213D',
-    fontSize: 15,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  weekRow: {
-    flexDirection: 'row',
-    marginBottom: 6,
-  },
-  weekDayText: {
-    width: `${100 / 7}%`,
-    color: '#64708A',
-    fontSize: 12,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  calendarGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 16,
-  },
-  calendarDayButton: {
-    width: `${100 / 7}%`,
-    aspectRatio: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 10,
-  },
-  calendarDaySelected: {
-    backgroundColor: '#0C4DFF',
-  },
-  calendarDayDisabled: {
-    opacity: 0.35,
-  },
-  calendarDayText: {
-    color: '#1B2435',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  calendarDaySelectedText: {
-    color: '#FFFFFF',
-  },
-  calendarDayDisabledText: {
-    color: '#8A94A8',
-  },
-  calendarCloseButton: {
-    alignSelf: 'center',
-    minWidth: 110,
+  pickerActionButton: {
     minHeight: 44,
-    borderRadius: 14,
-    alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0C4DFF',
-    paddingHorizontal: 18,
+    paddingHorizontal: 6,
   },
-  calendarCloseText: {
+  pickerActionText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#0C4DFF',
   },
 });

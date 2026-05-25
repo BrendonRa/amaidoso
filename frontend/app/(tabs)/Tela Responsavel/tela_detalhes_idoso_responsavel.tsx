@@ -17,7 +17,6 @@ import {
 import { getAuthErrorMessage } from '@/lib/firebase-auth-service';
 import {
   createLembrete,
-  createMedicacao,
   getIdosoByUid,
   listAnotacoes,
   listLembretes,
@@ -44,9 +43,6 @@ export default function TelaDetalhesIdosoResponsavel() {
   const [lembreteTitulo, setLembreteTitulo] = React.useState('');
   const [lembreteDescricao, setLembreteDescricao] = React.useState('');
   const [lembreteHorario, setLembreteHorario] = React.useState('');
-  const [medNome, setMedNome] = React.useState('');
-  const [medDose, setMedDose] = React.useState('');
-  const [medHorario, setMedHorario] = React.useState('');
 
   const loadData = React.useCallback(async () => {
     if (!uid) return;
@@ -88,30 +84,6 @@ export default function TelaDetalhesIdosoResponsavel() {
       setLembreteTitulo('');
       setLembreteDescricao('');
       setLembreteHorario('');
-      await loadData();
-    } catch (e) {
-      Alert.alert('Erro', getAuthErrorMessage(e, 'email'));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleCreateMedicacao = async () => {
-    if (!medNome.trim() || !medHorario.trim()) {
-      Alert.alert('Campos obrigatórios', 'Preencha pelo menos nome e horário da medicação.');
-      return;
-    }
-    try {
-      setSaving(true);
-      await createMedicacao(uid, {
-        nome: medNome.trim(),
-        dose: medDose.trim(),
-        horario: medHorario.trim(),
-        confirmadoEm: null,
-      });
-      setMedNome('');
-      setMedDose('');
-      setMedHorario('');
       await loadData();
     } catch (e) {
       Alert.alert('Erro', getAuthErrorMessage(e, 'email'));
@@ -173,12 +145,17 @@ export default function TelaDetalhesIdosoResponsavel() {
 
           {tab === 'medicacoes' ? (
             <View>
-              <Text style={styles.sectionTitle}>Criar medicação</Text>
-              <TextInput style={styles.input} placeholder="Nome do medicamento" value={medNome} onChangeText={setMedNome} />
-              <TextInput style={styles.input} placeholder="Dose" value={medDose} onChangeText={setMedDose} />
-              <TextInput style={styles.input} placeholder="Horário" value={medHorario} onChangeText={setMedHorario} />
-              <TouchableOpacity disabled={saving} onPress={() => void handleCreateMedicacao()} style={styles.primaryButton}>
-                <Text style={styles.primaryButtonText}>Salvar medicação</Text>
+              <Text style={styles.sectionTitle}>Medicações</Text>
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={() =>
+                  router.push({
+                    pathname: './tela_cadastrar_medicacao_responsavel',
+                    params: { idosoUid: uid },
+                  })
+                }
+                style={styles.primaryButton}>
+                <Text style={styles.primaryButtonText}>Cadastrar medicação</Text>
               </TouchableOpacity>
 
               <Text style={styles.sectionTitle}>Medicações e confirmações</Text>
@@ -187,8 +164,14 @@ export default function TelaDetalhesIdosoResponsavel() {
                   <InfoCard
                     key={item.id}
                     title={`${item.nome}${item.dose ? ` - ${item.dose}` : ''}`}
-                    meta={`${item.horario} • ${item.confirmado ? 'Confirmada' : 'Pendente'}`}
-                    body={item.confirmadoEm ? `Confirmado em ${new Date(item.confirmadoEm).toLocaleString('pt-BR')}` : ''}
+                    meta={`${item.dataInicio ? `${item.dataInicio} • ` : ''}${item.horario} • ${item.confirmado ? 'Confirmada' : 'Pendente'}`}
+                    body={[
+                      item.usoContinuo ? `Uso contínuo: ${item.frequencia}` : 'Uso contínuo: Não',
+                      item.novo ? 'Aviso: novo medicamento para o idoso' : '',
+                      item.confirmadoEm ? `Confirmado em ${new Date(item.confirmadoEm).toLocaleString('pt-BR')}` : '',
+                    ]
+                      .filter(Boolean)
+                      .join('\n')}
                   />
                 ))
               ) : (

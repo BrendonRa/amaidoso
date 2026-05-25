@@ -1,16 +1,35 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, Alert, Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  RefreshControl,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import { useIdosoProfile } from '@/contexts/idoso-profile-context';
-import { confirmMedicacao, listMedicacoes, type Medicacao } from '@/lib/idoso-data-service';
+import {
+  confirmMedicacao,
+  listMedicacoes,
+  markMedicacaoSeen,
+  registerCurrentIdosoNotificationToken,
+  type Medicacao,
+} from '@/lib/idoso-data-service';
 import IdosoBottomNav from './IdosoBottomNav';
 
 export default function ConfirmarMedicacoesScreen() {
   const { profile } = useIdosoProfile();
   const [medicacoes, setMedicacoes] = React.useState<Medicacao[] | null>(null);
   const [savingId, setSavingId] = React.useState<string | null>(null);
+  const [refreshing, setRefreshing] = React.useState(false);
+  const notifiedIds = React.useRef<Set<string>>(new Set());
 
   const load = React.useCallback(async () => {
     if (!profile?.uid) {
@@ -23,6 +42,35 @@ export default function ConfirmarMedicacoesScreen() {
   React.useEffect(() => {
     void load().catch(() => setMedicacoes([]));
   }, [load]);
+
+  const handleRefresh = React.useCallback(async () => {
+    try {
+      setRefreshing(true);
+      await load();
+    } catch {
+      Alert.alert('Erro', 'Não foi possível atualizar as medicações.');
+    } finally {
+      setRefreshing(false);
+    }
+  }, [load]);
+
+  React.useEffect(() => {
+    if (!profile?.uid) return;
+    void registerCurrentIdosoNotificationToken(profile.uid).catch(() => undefined);
+  }, [profile?.uid]);
+
+  React.useEffect(() => {
+    const novasMedicacoes = medicacoes?.filter((item) => item.novo && !notifiedIds.current.has(item.id)) ?? [];
+    if (!novasMedicacoes.length) return;
+
+    novasMedicacoes.forEach((item) => notifiedIds.current.add(item.id));
+    Alert.alert(
+      'Nova medicação',
+      novasMedicacoes.length === 1
+        ? `${novasMedicacoes[0].nome} foi adicionada pelo responsável.`
+        : `${novasMedicacoes.length} novas medicações foram adicionadas pelo responsável.`,
+    );
+  }, [medicacoes]);
 
   const handleConfirm = async (item: Medicacao, confirmado: boolean) => {
     if (!profile?.uid) return;
@@ -37,9 +85,69 @@ export default function ConfirmarMedicacoesScreen() {
     }
   };
 
+  const handleMarkSeen = async (item: Medicacao) => {
+    if (!profile?.uid) return;
+    try {
+      setSavingId(item.id);
+      await markMedicacaoSeen(profile.uid, item.id);
+      await load();
+    } catch {
+      Alert.alert('Erro', 'Não foi possível atualizar o aviso da medicação.');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
   const firstName = profile?.nome?.split(' ')[0] || 'Idoso';
   const photoUri =
     profile?.fotoPerfil && profile.fotoPerfil !== 'imagem_padrao.png' ? profile.fotoPerfil : null;
+
+  const renderMedicacao = ({ item }: { item: Medicacao }) => (
+    <View style={styles.card}>
+      <View style={styles.cardInfo}>
+        <View style={styles.cardTitleRow}>
+          <Text style={styles.cardText}>{item.nome}</Text>
+          {item.novo ? (
+            <View style={styles.newBadge}>
+              <Text style={styles.newBadgeText}>Novo</Text>
+            </View>
+          ) : null}
+        </View>
+        {item.dose ? <Text style={styles.doseText}>{item.dose}</Text> : null}
+        <View style={styles.actions}>
+          <TouchableOpacity
+            disabled={savingId === item.id}
+            onPress={() => void handleConfirm(item, true)}
+            style={[styles.confirmButton, item.confirmado && styles.confirmButtonActive]}>
+            <Text style={[styles.confirmButtonText, item.confirmado && styles.confirmButtonTextActive]}>
+              Tomei
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            disabled={savingId === item.id}
+            onPress={() => void handleConfirm(item, false)}
+            style={styles.undoButton}>
+            <Text style={styles.undoButtonText}>Ainda não</Text>
+          </TouchableOpacity>
+        </View>
+        {item.novo ? (
+          <TouchableOpacity
+            disabled={savingId === item.id}
+            onPress={() => void handleMarkSeen(item)}
+            style={styles.seenButton}>
+            <Text style={styles.seenButtonText}>Marcar como visto</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
+      <View style={styles.timeWrap}>
+        <Text style={styles.time}>{item.horario}</Text>
+        <Text style={[styles.status, item.confirmado && styles.statusOk]}>
+          {item.confirmado ? 'Confirmada' : 'Pendente'}
+        </Text>
+      </View>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -58,45 +166,32 @@ export default function ConfirmarMedicacoesScreen() {
         <Text style={styles.backButtonText}>Voltar</Text>
       </TouchableOpacity>
 
-      <View style={styles.content}>
-        {medicacoes === null ? (
+      {medicacoes === null ? (
+        <View style={styles.loadingContent}>
           <ActivityIndicator size="large" color="#F58220" />
-        ) : medicacoes.length ? (
-          medicacoes.map((item) => (
-            <View key={item.id} style={styles.card}>
-              <View style={styles.cardInfo}>
-                <Text style={styles.cardText}>{item.nome}</Text>
-                {item.dose ? <Text style={styles.doseText}>{item.dose}</Text> : null}
-                <View style={styles.actions}>
-                  <TouchableOpacity
-                    disabled={savingId === item.id}
-                    onPress={() => void handleConfirm(item, true)}
-                    style={[styles.confirmButton, item.confirmado && styles.confirmButtonActive]}>
-                    <Text style={[styles.confirmButtonText, item.confirmado && styles.confirmButtonTextActive]}>
-                      Tomei
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    disabled={savingId === item.id}
-                    onPress={() => void handleConfirm(item, false)}
-                    style={styles.undoButton}>
-                    <Text style={styles.undoButtonText}>Ainda não</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              <View style={styles.timeWrap}>
-                <Text style={styles.time}>{item.horario}</Text>
-                <Text style={[styles.status, item.confirmado && styles.statusOk]}>
-                  {item.confirmado ? 'Confirmada' : 'Pendente'}
-                </Text>
-              </View>
-            </View>
-          ))
-        ) : (
-          <Text style={styles.emptyText}>Nenhuma medicação cadastrada.</Text>
-        )}
-      </View>
+        </View>
+      ) : (
+        <FlatList
+          data={medicacoes}
+          keyExtractor={(item) => item.id}
+          renderItem={renderMedicacao}
+          contentContainerStyle={[
+            styles.listContent,
+            medicacoes.length === 0 && styles.emptyListContent,
+          ]}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={['#F58220']}
+              tintColor="#F58220"
+            />
+          }
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>Nenhuma medicação cadastrada.</Text>
+          }
+        />
+      )}
 
       <View style={styles.warningBox}>
         <Text style={styles.warningText}>As medicações são cadastradas pelo responsável. Confirme quando tomar.</Text>
@@ -151,10 +246,19 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  content: {
+  loadingContent: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  listContent: {
     padding: 20,
+    paddingBottom: 10,
     gap: 15,
+  },
+  emptyListContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   card: {
     backgroundColor: '#E6E6E6',
@@ -175,6 +279,24 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
     marginBottom: 3,
+  },
+  cardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 3,
+  },
+  newBadge: {
+    borderRadius: 999,
+    backgroundColor: '#F58220',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  newBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '900',
   },
   doseText: {
     fontSize: 13,
@@ -212,6 +334,19 @@ const styles = StyleSheet.create({
   undoButtonText: {
     color: '#A43232',
     fontWeight: '800',
+  },
+  seenButton: {
+    alignSelf: 'flex-start',
+    marginTop: 9,
+    borderRadius: 999,
+    backgroundColor: '#FFF4EA',
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+  },
+  seenButtonText: {
+    color: '#F58220',
+    fontWeight: '900',
+    fontSize: 12,
   },
   timeWrap: {
     alignItems: 'flex-end',

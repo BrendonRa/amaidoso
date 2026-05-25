@@ -1,19 +1,37 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import React from 'react';
-import { Animated, Modal, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Image,
+  Modal,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 import { useIdosoProfile } from '@/contexts/idoso-profile-context';
+import { getAuthErrorMessage } from '@/lib/firebase-auth-service';
 import { getFirebaseAuth } from '@/lib/firebase';
+import { updateCurrentIdosoPhoto } from '@/lib/idoso-data-service';
 import IdosoBottomNav from './IdosoBottomNav';
 
 export default function TelaConfiguracaoIdoso() {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
-  const [showEditWarning, setShowEditWarning] = React.useState(false);
+  const [showPhotoModal, setShowPhotoModal] = React.useState(false);
+  const [savingPhoto, setSavingPhoto] = React.useState(false);
   const thumbAnim = React.useRef(new Animated.Value(1)).current;
-  const { profile, clearProfile } = useIdosoProfile();
+  const { profile, updateProfile, clearProfile } = useIdosoProfile();
+  const photoUri =
+    profile?.fotoPerfil && profile.fotoPerfil !== 'imagem_padrao.png' ? profile.fotoPerfil : null;
 
   React.useEffect(() => {
     Animated.timing(thumbAnim, {
@@ -28,7 +46,47 @@ export default function TelaConfiguracaoIdoso() {
   };
 
   const handleEditProfile = () => {
-    setShowEditWarning(true);
+    setShowPhotoModal(true);
+  };
+
+  const pickProfilePhoto = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert('Permissão necessária', 'Permita o acesso à galeria para selecionar uma foto.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      base64: true,
+      quality: 0.45,
+    });
+
+    if (result.canceled || !result.assets.length) {
+      return;
+    }
+
+    const asset = result.assets[0];
+    const photoValue = asset.base64
+      ? `data:${asset.mimeType ?? 'image/jpeg'};base64,${asset.base64}`
+      : asset.uri;
+
+    await saveProfilePhoto(photoValue);
+  };
+
+  const saveProfilePhoto = async (uri: string | null) => {
+    try {
+      setSavingPhoto(true);
+      await updateCurrentIdosoPhoto(uri);
+      updateProfile({ fotoPerfil: uri || 'imagem_padrao.png' });
+      setShowPhotoModal(false);
+    } catch (error) {
+      Alert.alert('Erro', getAuthErrorMessage(error, 'email'));
+    } finally {
+      setSavingPhoto(false);
+    }
   };
 
   const toggleNotifications = () => {
@@ -52,7 +110,11 @@ export default function TelaConfiguracaoIdoso() {
         <Text style={styles.title}>DEFINIÇÕES</Text>
         {profile ? (
           <View style={styles.profileSummary}>
-            <Ionicons name="person-circle-outline" size={42} color="#F58220" />
+            {photoUri ? (
+              <Image source={{ uri: photoUri }} style={styles.profileSummaryImage} />
+            ) : (
+              <Ionicons name="person-circle-outline" size={42} color="#F58220" />
+            )}
             <View style={styles.profileSummaryText}>
               <Text style={styles.profileName}>{profile.nome || 'Idoso'}</Text>
               <Text style={styles.profileCpf}>CPF: {profile.cpf}</Text>
@@ -122,23 +184,50 @@ export default function TelaConfiguracaoIdoso() {
       <Modal
         animationType="fade"
         transparent
-        visible={showEditWarning}
-        onRequestClose={() => setShowEditWarning(false)}>
+        visible={showPhotoModal}
+        onRequestClose={() => setShowPhotoModal(false)}>
         <View style={styles.modalOverlay}>
-          <Pressable style={styles.modalBackdrop} onPress={() => setShowEditWarning(false)} />
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowPhotoModal(false)} />
           <View style={styles.modalCard}>
-            <View style={styles.modalIconWrap}>
-              <Feather name="lock" size={24} color="#F58220" />
+            <View style={styles.photoPreview}>
+              {photoUri ? (
+                <Image source={{ uri: photoUri }} style={styles.photoPreviewImage} />
+              ) : (
+                <Ionicons name="person-outline" size={62} color="#F58220" />
+              )}
             </View>
-            <Text style={styles.modalTitle}>Permissão necessária</Text>
-            <Text style={styles.modalText}>Você não tem permissão para editar o perfil. Somente o responsável pode fazer essa alteração.</Text>
+            <Text style={styles.modalTitle}>Editar foto</Text>
+            <Text style={styles.modalText}>Nome, CPF e data continuam bloqueados. Aqui você pode alterar apenas sua foto de perfil.</Text>
 
-            <View style={styles.modalActions}>
+            <View style={styles.modalStackActions}>
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={() => setShowEditWarning(false)}
-                style={styles.modalPrimaryButton}>
-                <Text style={styles.modalPrimaryText}>Entendi</Text>
+                disabled={savingPhoto}
+                onPress={pickProfilePhoto}
+                style={styles.modalFullPrimaryButton}>
+                {savingPhoto ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.modalPrimaryText}>Escolher foto</Text>
+                )}
+              </TouchableOpacity>
+
+              {photoUri ? (
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  disabled={savingPhoto}
+                  onPress={() => void saveProfilePhoto(null)}
+                  style={styles.modalFullSecondaryButton}>
+                  <Text style={styles.modalSecondaryText}>Remover foto</Text>
+                </TouchableOpacity>
+              ) : null}
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                disabled={savingPhoto}
+                onPress={() => setShowPhotoModal(false)}
+                style={styles.modalFullGhostButton}>
+                <Text style={styles.modalGhostText}>Cancelar</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -211,6 +300,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
     gap: 12,
+  },
+  profileSummaryImage: {
+    width: 42,
+    height: 42,
+    borderRadius: 999,
+    backgroundColor: '#FFE4CC',
   },
   profileSummaryText: {
     flex: 1,
@@ -297,6 +392,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 14,
   },
+  photoPreview: {
+    width: 116,
+    height: 116,
+    borderRadius: 999,
+    backgroundColor: '#FFF3E8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+    overflow: 'hidden',
+  },
+  photoPreviewImage: {
+    width: '100%',
+    height: '100%',
+  },
   modalTitle: {
     fontSize: 20,
     fontWeight: '800',
@@ -314,6 +423,10 @@ const styles = StyleSheet.create({
   modalActions: {
     width: '100%',
     flexDirection: 'row',
+    gap: 10,
+  },
+  modalStackActions: {
+    width: '100%',
     gap: 10,
   },
   modalSecondaryButton: {
@@ -343,6 +456,35 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  modalFullPrimaryButton: {
+    width: '100%',
+    minHeight: 46,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F58220',
+  },
+  modalFullSecondaryButton: {
+    width: '100%',
+    minHeight: 46,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#F58220',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  modalFullGhostButton: {
+    width: '100%',
+    minHeight: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalGhostText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#666666',
   },
   toggleButton: {
     width: 52,

@@ -10,9 +10,18 @@ service cloud.firestore {
       );
       allow create: if request.auth != null
         && request.resource.data.responsavelId == request.auth.uid;
-      allow update, delete: if request.auth != null && (
-        request.auth.uid == idosoId || resource.data.responsavelId == request.auth.uid
-      );
+      allow update: if request.auth != null
+        && resource.data.responsavelId == request.auth.uid;
+      allow update: if request.auth != null
+        && request.auth.uid == idosoId
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'fotoPerfil',
+          'updatedAt',
+          'expoPushToken',
+          'pushTokenUpdatedAt'
+        ]);
+      allow delete: if request.auth != null
+        && resource.data.responsavelId == request.auth.uid;
 
       match /lembretes/{lembreteId} {
         allow read: if request.auth != null && (
