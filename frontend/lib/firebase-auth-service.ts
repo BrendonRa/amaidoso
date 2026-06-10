@@ -35,63 +35,56 @@ function mapFirebaseAuthMessage(code: string | undefined, flow?: AuthFlow): stri
   switch (code) {
     case 'auth/email-already-in-use':
     case 'EMAIL_EXISTS':
-      return 'Este e-mail ou CPF já está cadastrado.';
+      return 'Este cadastro ja existe.';
     case 'EMAIL_NOT_VERIFIED':
-      return 'Antes de entrar, confirme seu e-mail pelo link enviado para sua caixa de entrada. Se o link anterior expirou, enviamos um novo agora. Confira também a pasta de spam.';
+      return 'Confirme seu e-mail antes de entrar.';
     case 'auth/invalid-email':
     case 'INVALID_EMAIL':
-      return 'E-mail inválido.';
+      return 'Digite um e-mail valido.';
     case 'auth/weak-password':
     case 'WEAK_PASSWORD':
-      return 'A senha deve ter pelo menos 6 caracteres.';
+      return 'Use pelo menos 6 caracteres.';
     case 'auth/missing-password':
-      return 'Digite sua senha atual para alterar esse e-mail.';
+      return 'Digite sua senha.';
     case 'auth/missing-new-password':
-      return 'Crie uma senha para conseguir entrar com o novo e-mail.';
+      return 'Crie uma senha.';
     case 'auth/requires-recent-login':
-      return flow === 'google'
-        ? 'Por segurança, entre novamente com Google e tente alterar o e-mail de novo.'
-        : 'Por segurança, faça login novamente antes de alterar esse dado.';
+      return 'Entre novamente e tente de novo.';
     case 'auth/user-not-found':
     case 'auth/wrong-password':
     case 'auth/invalid-credential':
     case 'EMAIL_NOT_FOUND':
     case 'INVALID_PASSWORD':
     case 'INVALID_LOGIN_CREDENTIALS':
-      return flow === 'email'
-        ? 'Credenciais inválidas. Se essa conta veio da migração, confirme se ela existe em Firebase Authentication, não apenas no Firestore.'
-        : 'Credenciais inválidas.';
+      return 'Dados incorretos.';
     case 'auth/network-request-failed':
-      return 'Sem conexão com a internet. Tente de novo.';
+      return 'Sem internet. Tente de novo.';
     case 'auth/too-many-requests':
-      return 'Muitas tentativas. Aguarde um pouco e tente de novo.';
+      return 'Aguarde um pouco e tente de novo.';
     case 'auth/popup-blocked':
     case 'auth/popup-closed-by-user':
-      return 'O popup do Google foi bloqueado ou fechado. Permita popups para este site.';
+      return 'Login com Google fechado.';
     case 'auth/cancelled-popup-request':
       return 'Login cancelado.';
     case 'auth/unauthorized-domain':
-      return 'Este endereço não está na lista de domínios autorizados. No Firebase: Authentication → Configurações → Domínios autorizados — adicione localhost (ou o host que você usa, ex.: IP da rede).';
+      return 'Login indisponivel neste aparelho.';
     case 'auth/operation-not-allowed':
-      if (flow === 'google') {
-        return 'Provedor desativado. No Firebase: Authentication → Método de login — ative o Google.';
-      }
-      return 'Login por e-mail e senha desativado. No Firebase: Authentication → Método de login — ative E-mail/senha.';
+      return 'Este tipo de login nao esta disponivel.';
     case 'auth/internal-error':
-      return 'Erro interno do Firebase ao abrir o Google (comum na web sem app Web registrado). No Console, crie um app Web, copie o App ID e defina EXPO_PUBLIC_FIREBASE_WEB_APP_ID no .env do frontend; reinicie o Expo.';
+      return 'Nao foi possivel entrar agora.';
     case 'auth/invalid-api-key':
-      return 'Chave de API inválida ou restrita. Verifique a API Key no projeto Google Cloud e as restrições HTTP.';
+      return 'Nao foi possivel entrar agora.';
     case 'auth/invalid-app-credential':
-      return 'Credencial do app inválida na web. Registre um app Web no Firebase e use EXPO_PUBLIC_FIREBASE_WEB_APP_ID com o App ID correto (formato 1:…:web:…).';
+      return 'Nao foi possivel entrar agora.';
     case 'permission-denied':
-      return 'Login autenticado, mas o Firestore bloqueou o acesso ao perfil. Publique as regras do Firestore ou verifique se o documento usa o mesmo UID do usuário autenticado.';
+      return 'Acesso nao permitido.';
     case 'unavailable':
-      return 'O Firebase autenticou, mas o Firestore está indisponível agora. Tente novamente em instantes.';
+      return 'Servico indisponivel. Tente de novo.';
     default:
       if (code?.startsWith('auth/')) {
-        return `Firebase: ${code}. Confira o console do navegador (F12) e as configurações do projeto (app Web, Google ativo, domínios autorizados).`;
+        return 'Nao foi possivel entrar agora.';
       }
-      return 'Não foi possível concluir a operação. Tente novamente.';
+      return 'Nao foi possivel concluir. Tente de novo.';
   }
 }
 
@@ -113,11 +106,9 @@ export function getAuthErrorMessage(error: unknown, flow?: AuthFlow): string {
     if (msg.includes('INVALID_LOGIN_CREDENTIALS')) {
       return mapFirebaseAuthMessage('INVALID_LOGIN_CREDENTIALS', flow);
     }
-    if (msg.length < 120) {
-      return msg;
-    }
+    return 'Nao foi possivel concluir. Tente de novo.';
   }
-  return 'Não foi possível concluir a operação. Tente novamente.';
+  return 'Nao foi possivel concluir. Tente de novo.';
 }
 
 async function signUpIdentityToolkit(email: string, password: string): Promise<{ localId: string }> {

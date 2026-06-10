@@ -137,9 +137,7 @@ export default function TelaConfigResponsavel() {
               <Feather name="log-out" size={24} color="#A43232" />
             </View>
             <Text style={styles.modalTitle}>Deseja sair da conta?</Text>
-            <Text style={styles.modalText}>
-              Ao continuar, voce voltara para a tela de inicio.
-            </Text>
+            <Text style={styles.modalText}>Voce voltara ao inicio.</Text>
 
             <View style={styles.modalActions}>
               <TouchableOpacity

@@ -20,6 +20,7 @@ import {
   listMedicacoes,
   markMedicacaoSeen,
   registerCurrentIdosoNotificationToken,
+  subscribeMedicacoes,
   type Medicacao,
 } from '@/lib/idoso-data-service';
 import IdosoBottomNav from './IdosoBottomNav';
@@ -40,15 +41,24 @@ export default function ConfirmarMedicacoesScreen() {
   }, [profile?.uid]);
 
   React.useEffect(() => {
-    void load().catch(() => setMedicacoes([]));
-  }, [load]);
+    if (!profile?.uid) {
+      setMedicacoes([]);
+      return undefined;
+    }
+
+    return subscribeMedicacoes(
+      profile.uid,
+      setMedicacoes,
+      () => setMedicacoes([]),
+    );
+  }, [profile?.uid]);
 
   const handleRefresh = React.useCallback(async () => {
     try {
       setRefreshing(true);
       await load();
     } catch {
-      Alert.alert('Erro', 'Não foi possível atualizar as medicações.');
+      Alert.alert('Erro', 'Tente de novo.');
     } finally {
       setRefreshing(false);
     }
@@ -65,10 +75,10 @@ export default function ConfirmarMedicacoesScreen() {
 
     novasMedicacoes.forEach((item) => notifiedIds.current.add(item.id));
     Alert.alert(
-      'Nova medicação',
+      'Novo remedio',
       novasMedicacoes.length === 1
-        ? `${novasMedicacoes[0].nome} foi adicionada pelo responsável.`
-        : `${novasMedicacoes.length} novas medicações foram adicionadas pelo responsável.`,
+        ? `${novasMedicacoes[0].nome} adicionado.`
+        : `${novasMedicacoes.length} remedios adicionados.`,
     );
   }, [medicacoes]);
 
@@ -77,9 +87,8 @@ export default function ConfirmarMedicacoesScreen() {
     try {
       setSavingId(item.id);
       await confirmMedicacao(profile.uid, item.id, confirmado);
-      await load();
     } catch {
-      Alert.alert('Erro', 'Não foi possível confirmar a medicação.');
+      Alert.alert('Erro', 'Tente de novo.');
     } finally {
       setSavingId(null);
     }
@@ -90,9 +99,8 @@ export default function ConfirmarMedicacoesScreen() {
     try {
       setSavingId(item.id);
       await markMedicacaoSeen(profile.uid, item.id);
-      await load();
     } catch {
-      Alert.alert('Erro', 'Não foi possível atualizar o aviso da medicação.');
+      Alert.alert('Erro', 'Tente de novo.');
     } finally {
       setSavingId(null);
     }

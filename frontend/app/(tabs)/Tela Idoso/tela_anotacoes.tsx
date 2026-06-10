@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 
 import { useIdosoProfile } from '@/contexts/idoso-profile-context';
-import { createAnotacao, listAnotacoes, type Anotacao } from '@/lib/idoso-data-service';
+import { createAnotacao, subscribeAnotacoes, type Anotacao } from '@/lib/idoso-data-service';
 import IdosoBottomNav from './IdosoBottomNav';
 
 export default function TelaAnotacoesIdoso() {
@@ -23,30 +23,26 @@ export default function TelaAnotacoesIdoso() {
   const [texto, setTexto] = React.useState('');
   const [saving, setSaving] = React.useState(false);
 
-  const load = React.useCallback(async () => {
+  React.useEffect(() => {
     if (!profile?.uid) {
       setAnotacoes([]);
-      return;
+      return undefined;
     }
-    setAnotacoes(await listAnotacoes(profile.uid));
-  }, [profile?.uid]);
 
-  React.useEffect(() => {
-    void load().catch(() => setAnotacoes([]));
-  }, [load]);
+    return subscribeAnotacoes(profile.uid, setAnotacoes, () => setAnotacoes([]));
+  }, [profile?.uid]);
 
   const handleSave = async () => {
     if (!profile?.uid || !texto.trim()) {
-      Alert.alert('Anotação', 'Escreva uma anotação antes de salvar.');
+      Alert.alert('Anotação', 'Escreva algo primeiro.');
       return;
     }
     try {
       setSaving(true);
       await createAnotacao(profile.uid, texto);
       setTexto('');
-      await load();
     } catch {
-      Alert.alert('Erro', 'Não foi possível salvar a anotação.');
+      Alert.alert('Erro', 'Tente de novo.');
     } finally {
       setSaving(false);
     }

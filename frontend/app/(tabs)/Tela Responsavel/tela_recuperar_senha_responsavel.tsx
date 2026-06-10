@@ -27,11 +27,11 @@ export default function TelaRecuperarSenhaResponsavel() {
   const handleSendLink = async () => {
     const normalized = email.trim().toLowerCase();
     if (!normalized) {
-      Alert.alert('E-mail', 'Informe o e-mail da sua conta.');
+      Alert.alert('E-mail', 'Digite seu e-mail.');
       return;
     }
     if (!isValidEmail(normalized)) {
-      Alert.alert('E-mail inválido', 'Digite um e-mail válido.');
+      Alert.alert('E-mail inválido', 'Digite um e-mail valido.');
       return;
     }
 
@@ -40,7 +40,7 @@ export default function TelaRecuperarSenhaResponsavel() {
       await sendResponsavelPasswordResetEmail(normalized);
       setShowSuccessModal(true);
     } catch (error) {
-      Alert.alert('Não foi possível enviar', getAuthErrorMessage(error));
+      Alert.alert('Erro', getAuthErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -70,10 +70,7 @@ export default function TelaRecuperarSenhaResponsavel() {
           />
 
           <Text style={styles.title}>Recupere sua Senha</Text>
-          <Text style={styles.subtitle}>
-            Informe o e-mail da conta. Você receberá um e-mail do Firebase com um link para criar uma
-            nova senha (abra o link no navegador).
-          </Text>
+          <Text style={styles.subtitle}>Digite seu e-mail para receber o link.</Text>
 
           <View style={styles.form}>
             <TextInput
@@ -125,11 +122,7 @@ export default function TelaRecuperarSenhaResponsavel() {
               <Text style={styles.modalIcon}>@</Text>
             </View>
             <Text style={styles.modalTitle}>E-mail enviado</Text>
-            <Text style={styles.modalText}>
-              Se existir uma conta com esse e-mail, o Firebase enviou uma mensagem com um link seguro.
-              Abra o e-mail, clique no link e defina a nova senha no navegador. Depois volte ao app e
-              entre com a nova senha.
-            </Text>
+            <Text style={styles.modalText}>Abra o e-mail e toque no link.</Text>
 
             <TouchableOpacity
               activeOpacity={0.85}

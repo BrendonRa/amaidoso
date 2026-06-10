@@ -76,24 +76,24 @@ export default function TelaCadastroResponsavel() {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (!normalizedName || !normalizedEmail || !password || !confirmPassword) {
-      setFormError('Preencha todos os campos para continuar.');
+      setFormError('Preencha todos os campos.');
       return;
     }
 
     if (!isValidEmail(normalizedEmail)) {
       setFormError('');
-      Alert.alert('Email inválido', 'Digite um email válido para concluir o cadastro.');
+      Alert.alert('Email inválido', 'Digite um email valido.');
       return;
     }
 
     if (password.length < 6) {
       setFormError('');
-      Alert.alert('Senha', 'A senha deve ter pelo menos 6 caracteres (Firebase).');
+      Alert.alert('Senha', 'Use pelo menos 6 caracteres.');
       return;
     }
 
     if (password !== confirmPassword) {
-      setFormError('As senhas não conferem. Digite a mesma senha nos dois campos.');
+      setFormError('As senhas nao sao iguais.');
       return;
     }
 
@@ -119,9 +119,9 @@ export default function TelaCadastroResponsavel() {
       const timedOut =
         error instanceof Error && error.message === 'TIMEOUT_CADASTRO';
       Alert.alert(
-        timedOut ? 'Demora anormal' : 'Erro no cadastro',
+        timedOut ? 'Demorou demais' : 'Erro no cadastro',
         timedOut
-          ? 'A criação da conta passou do tempo esperado (rede). Tente de novo ou abra a tela de login se o usuário já tiver sido criado.'
+          ? 'Tente de novo.'
           : getAuthErrorMessage(error, 'email'),
       );
     } finally {
@@ -145,9 +145,9 @@ export default function TelaCadastroResponsavel() {
       setResendFeedback('');
       await resendCurrentResponsavelEmailVerification();
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
-      setResendFeedback('Novo link enviado. Confira sua caixa de entrada e o spam.');
+      setResendFeedback('Novo link enviado.');
     } catch (error) {
-      Alert.alert('Não foi possível reenviar', getAuthErrorMessage(error, 'email'));
+      Alert.alert('Erro', getAuthErrorMessage(error, 'email'));
     } finally {
       setIsResending(false);
     }
@@ -303,13 +303,8 @@ export default function TelaCadastroResponsavel() {
             </View>
 
             <Text style={styles.modalTitle}>Confirme seu e-mail</Text>
-            <Text style={styles.modalText}>
-              Enviamos um link de confirmação para {verificationEmail}. Abra esse e-mail, clique
-              no link e depois entre com sua conta.
-            </Text>
-            <Text style={styles.modalHint}>
-              Isso confirma que o endereço informado está correto. Confira também a pasta de spam.
-            </Text>
+            <Text style={styles.modalText}>Enviamos um link para {verificationEmail}.</Text>
+            <Text style={styles.modalHint}>Abra o e-mail e toque no link.</Text>
 
             {resendFeedback ? <Text style={styles.resendFeedback}>{resendFeedback}</Text> : null}
 

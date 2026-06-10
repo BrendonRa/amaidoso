@@ -45,7 +45,7 @@ export default function TelaEdicaoPerfilResponsavel() {
   async function pickImage() {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
-      alert('Permita o acesso à galeria para selecionar uma foto.');
+      alert('Permita acessar suas fotos.');
       return;
     }
 
@@ -66,33 +66,33 @@ export default function TelaEdicaoPerfilResponsavel() {
     const currentEmail = profile.email.trim().toLowerCase();
 
     if (!normalizedNewEmail) {
-      setFormError('Preencha o e-mail para continuar.');
+      setFormError('Digite seu e-mail.');
       return;
     }
 
     if (!isValidEmail(normalizedNewEmail)) {
-      setFormError('Digite um e-mail válido.');
+      setFormError('Digite um e-mail valido.');
       return;
     }
 
     if (normalizedNewEmail !== currentEmail && shouldAskCurrentPassword && !currentPassword) {
-      setFormError('Digite sua senha atual para alterar o e-mail.');
+      setFormError('Digite sua senha.');
       return;
     }
 
     if (normalizedNewEmail !== currentEmail && shouldCreatePassword) {
       if (!newPassword || !confirmNewPassword) {
-        setFormError('Crie e confirme uma senha para entrar com o novo e-mail.');
+        setFormError('Digite e confirme a senha.');
         return;
       }
 
       if (newPassword.length < 6) {
-        setFormError('A nova senha deve ter pelo menos 6 caracteres.');
+        setFormError('Use pelo menos 6 caracteres.');
         return;
       }
 
       if (newPassword !== confirmNewPassword) {
-        setFormError('As senhas novas não conferem.');
+        setFormError('As senhas nao sao iguais.');
         return;
       }
     }
@@ -130,7 +130,7 @@ export default function TelaEdicaoPerfilResponsavel() {
     } catch (error) {
       setShowConfirmModal(false);
       Alert.alert(
-        'Não foi possível alterar',
+        'Erro',
         getAuthErrorMessage(error, authProvider === 'google' ? 'google' : 'email'),
       );
     } finally {
@@ -196,8 +196,8 @@ export default function TelaEdicaoPerfilResponsavel() {
                   <Text style={styles.emailLabel}>E-mail de acesso</Text>
                   <Text style={styles.emailHint}>
                     {authProvider === 'google'
-                      ? 'Conta Google: crie uma senha se quiser entrar com o novo e-mail.'
-                      : 'Para trocar, informe sua senha atual abaixo.'}
+                      ? 'Para trocar, crie uma senha.'
+                      : 'Para trocar, digite sua senha.'}
                   </Text>
                 </View>
               </View>
@@ -245,8 +245,7 @@ export default function TelaEdicaoPerfilResponsavel() {
                   <Text style={styles.passwordSetupTitle}>Crie uma senha para o novo acesso</Text>
                 </View>
                 <Text style={styles.passwordSetupText}>
-                  Depois de confirmar o link enviado ao novo e-mail, voce podera entrar usando esse
-                  e-mail e esta senha.
+                  Use esta senha no proximo login.
                 </Text>
                 <TextInput
                   onChangeText={(value) => {
@@ -279,8 +278,7 @@ export default function TelaEdicaoPerfilResponsavel() {
               <View style={styles.googleNotice}>
                 <Feather name="info" size={16} color="#0C4DFF" />
                 <Text style={styles.googleNoticeText}>
-                  Esta conta entrou com Google. Ao trocar o e-mail, a tela vai pedir uma senha para
-                  o novo acesso.
+                  Para trocar o e-mail, crie uma senha.
                 </Text>
               </View>
             )}
@@ -345,9 +343,9 @@ export default function TelaEdicaoPerfilResponsavel() {
             <Text style={styles.modalText}>
               {pendingEmail.trim().toLowerCase() !== profile.email.trim().toLowerCase()
                 ? authProvider === 'google'
-                  ? 'Vamos criar sua senha de acesso e enviar um link para o novo e-mail. A troca só termina quando você clicar nesse link.'
-                  : 'Vamos enviar um link para o novo e-mail. A troca só será concluída depois que você clicar nesse link.'
-                : 'Tem certeza que deseja confirmar as alterações feitas no perfil?'}
+                  ? 'Enviaremos um link para o novo e-mail.'
+                  : 'Enviaremos um link para o novo e-mail.'
+                : 'Salvar alteracoes?'}
             </Text>
 
             <View style={styles.modalActions}>
@@ -383,10 +381,7 @@ export default function TelaEdicaoPerfilResponsavel() {
               <Feather name="mail" size={24} color="#0C4DFF" />
             </View>
             <Text style={styles.modalTitle}>Confirme o novo e-mail</Text>
-            <Text style={styles.modalText}>
-              Enviamos um link para {pendingEmail.trim().toLowerCase()}. Abra esse e-mail e clique
-              no link para concluir a alteração.
-            </Text>
+            <Text style={styles.modalText}>Abra o e-mail e toque no link.</Text>
 
             <TouchableOpacity
               activeOpacity={0.85}

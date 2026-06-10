@@ -52,7 +52,7 @@ export default function TelaConfiguracaoIdoso() {
   const pickProfilePhoto = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
-      Alert.alert('Permissão necessária', 'Permita o acesso à galeria para selecionar uma foto.');
+      Alert.alert('Permissão necessária', 'Permita acessar suas fotos.');
       return;
     }
 
@@ -197,7 +197,7 @@ export default function TelaConfiguracaoIdoso() {
               )}
             </View>
             <Text style={styles.modalTitle}>Editar foto</Text>
-            <Text style={styles.modalText}>Nome, CPF e data continuam bloqueados. Aqui você pode alterar apenas sua foto de perfil.</Text>
+            <Text style={styles.modalText}>Aqui voce altera sua foto.</Text>
 
             <View style={styles.modalStackActions}>
               <TouchableOpacity
@@ -246,7 +246,7 @@ export default function TelaConfiguracaoIdoso() {
               <Feather name="log-out" size={24} color="#A43232" />
             </View>
             <Text style={styles.modalTitle}>Deseja sair da conta?</Text>
-            <Text style={styles.modalText}>Ao continuar, voce voltara para a tela de inicio.</Text>
+            <Text style={styles.modalText}>Voce voltara ao inicio.</Text>
 
             <View style={styles.modalActions}>
               <TouchableOpacity

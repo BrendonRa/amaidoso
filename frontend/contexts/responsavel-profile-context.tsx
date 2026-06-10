@@ -1,6 +1,9 @@
 import React from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 import type { ResponsavelAuthProvider } from '@/lib/firebase-auth-service';
+import { getFirebaseAuth, getFirebaseFirestore } from '@/lib/firebase';
 
 type ResponsavelProfile = {
   nome: string;
@@ -34,6 +37,45 @@ const ResponsavelProfileContext = React.createContext<ResponsavelProfileContextV
 
 export function ResponsavelProfileProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = React.useState<ResponsavelProfile>(initialProfile);
+
+  React.useEffect(() => {
+    const auth = getFirebaseAuth();
+    const db = getFirebaseFirestore();
+
+    return onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        setProfile(initialProfile);
+        return;
+      }
+
+      void getDoc(doc(db, 'responsaveis', user.uid))
+        .then((snap) => {
+          if (!snap.exists()) {
+            return;
+          }
+
+          const data = snap.data();
+          const email = user.email ?? String(data.email ?? initialProfile.email);
+          const nome = String(data.nomeResponsavel ?? user.displayName ?? email.split('@')[0]);
+          const providers = user.providerData.map((provider) => provider.providerId);
+          const authProvider: ResponsavelAuthProvider = providers.includes('google.com')
+            ? 'google'
+            : providers.includes('password')
+              ? 'password'
+              : 'unknown';
+
+          setProfile((current) => ({
+            ...current,
+            nome,
+            usuario: nome,
+            email,
+            photoUri: data.fotoPerfil != null ? String(data.fotoPerfil) : user.photoURL,
+            authProvider,
+          }));
+        })
+        .catch(() => undefined);
+    });
+  }, []);
 
   const updateProfile = React.useCallback((updates: Partial<ResponsavelProfile>) => {
     setProfile((current) => ({ ...current, ...updates }));

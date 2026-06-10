@@ -17,10 +17,10 @@ import {
 import { getAuthErrorMessage } from '@/lib/firebase-auth-service';
 import {
   createLembrete,
-  getIdosoByUid,
-  listAnotacoes,
-  listLembretes,
-  listMedicacoes,
+  subscribeAnotacoes,
+  subscribeIdosoByUid,
+  subscribeLembretes,
+  subscribeMedicacoes,
   type Anotacao,
   type IdosoResumo,
   type Lembrete,
@@ -44,34 +44,41 @@ export default function TelaDetalhesIdosoResponsavel() {
   const [lembreteDescricao, setLembreteDescricao] = React.useState('');
   const [lembreteHorario, setLembreteHorario] = React.useState('');
 
-  const loadData = React.useCallback(async () => {
-    if (!uid) return;
-    try {
-      setLoading(true);
-      const [idosoData, lembretesData, medicacoesData, anotacoesData] = await Promise.all([
-        getIdosoByUid(uid),
-        listLembretes(uid),
-        listMedicacoes(uid),
-        listAnotacoes(uid),
-      ]);
-      setIdoso(idosoData);
-      setLembretes(lembretesData);
-      setMedicacoes(medicacoesData);
-      setAnotacoes(anotacoesData);
-    } catch (e) {
-      Alert.alert('Erro', getAuthErrorMessage(e, 'email'));
-    } finally {
-      setLoading(false);
-    }
-  }, [uid]);
-
   React.useEffect(() => {
-    void loadData();
-  }, [loadData]);
+    if (!uid) {
+      setIdoso(null);
+      setLembretes([]);
+      setMedicacoes([]);
+      setAnotacoes([]);
+      setLoading(false);
+      return undefined;
+    }
+
+    setLoading(true);
+    const handleError = (e: unknown) => {
+      Alert.alert('Erro', getAuthErrorMessage(e, 'email'));
+      setLoading(false);
+    };
+
+    const unsubIdoso = subscribeIdosoByUid(uid, (idosoData) => {
+      setIdoso(idosoData);
+      setLoading(false);
+    }, handleError);
+    const unsubLembretes = subscribeLembretes(uid, setLembretes, handleError);
+    const unsubMedicacoes = subscribeMedicacoes(uid, setMedicacoes, handleError);
+    const unsubAnotacoes = subscribeAnotacoes(uid, setAnotacoes, handleError);
+
+    return () => {
+      unsubIdoso();
+      unsubLembretes();
+      unsubMedicacoes();
+      unsubAnotacoes();
+    };
+  }, [uid]);
 
   const handleCreateLembrete = async () => {
     if (!lembreteTitulo.trim() || !lembreteHorario.trim()) {
-      Alert.alert('Campos obrigatórios', 'Preencha pelo menos título e horário do lembrete.');
+      Alert.alert('Campos obrigatórios', 'Preencha titulo e horario.');
       return;
     }
     try {
@@ -84,7 +91,6 @@ export default function TelaDetalhesIdosoResponsavel() {
       setLembreteTitulo('');
       setLembreteDescricao('');
       setLembreteHorario('');
-      await loadData();
     } catch (e) {
       Alert.alert('Erro', getAuthErrorMessage(e, 'email'));
     } finally {
@@ -97,6 +103,7 @@ export default function TelaDetalhesIdosoResponsavel() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.screen}>
       <View style={styles.header}>
         <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={styles.backButton}>
           <Feather name="arrow-left" size={22} color="#FFFFFF" />
@@ -194,6 +201,32 @@ export default function TelaDetalhesIdosoResponsavel() {
           ) : null}
         </ScrollView>
       )}
+
+      <View style={styles.bottomBar}>
+        <TouchableOpacity activeOpacity={0.6} style={styles.navItem}>
+          <View style={styles.activePill}>
+            <Feather name="edit-3" size={24} color="#121212" />
+          </View>
+          <Text style={styles.navLabel}>Painel</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.6}
+          onPress={() => router.push('./tela_home_responsavel')}
+          style={styles.navItem}>
+          <Image source={require('../../../assets/images/home.png')} style={styles.navIcon} />
+          <Text style={styles.navLabel}>Home</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          activeOpacity={0.6}
+          onPress={() => router.push('./tela_config_responsavel')}
+          style={styles.navItem}>
+          <Feather name="settings" size={24} color="#121212" />
+          <Text style={styles.navLabel}>Configuracoes</Text>
+        </TouchableOpacity>
+      </View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -222,6 +255,10 @@ function Empty({ text }: { text: string }) {
 
 const styles = StyleSheet.create({
   safeArea: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  screen: {
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
@@ -265,7 +302,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 110,
   },
   tabs: {
     flexDirection: 'row',
@@ -350,5 +387,39 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#707070',
     fontWeight: '700',
+  },
+  bottomBar: {
+    height: 82,
+    borderTopWidth: 1,
+    borderTopColor: '#151515',
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingHorizontal: 20,
+    paddingBottom: 6,
+  },
+  navItem: {
+    minWidth: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navIcon: {
+    width: 26,
+    height: 26,
+    resizeMode: 'contain',
+  },
+  activePill: {
+    width: 52,
+    height: 30,
+    borderRadius: 999,
+    backgroundColor: '#9AB8FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navLabel: {
+    marginTop: 4,
+    fontSize: 12,
+    color: '#1A1A1A',
   },
 });

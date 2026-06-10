@@ -1,6 +1,5 @@
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, router } from 'expo-router';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { router } from 'expo-router';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -30,7 +29,7 @@ import {
   getAuthErrorMessage,
   updateIdosoForResponsavel,
 } from '@/lib/firebase-auth-service';
-import { getFirebaseAuth, getFirebaseFirestore } from '@/lib/firebase';
+import { subscribeIdososForCurrentResponsavel } from '@/lib/idoso-data-service';
 
 type IdosoItem = {
   uid: string;
@@ -62,44 +61,20 @@ export default function TelaPainelResponsavel() {
   const [confirmSenhaIdoso, setConfirmSenhaIdoso] = React.useState('');
   const [saving, setSaving] = React.useState(false);
 
-  const loadIdosos = React.useCallback(async () => {
-    const u = getFirebaseAuth().currentUser;
-    if (!u) {
-      setIdosos([]);
-      setLoading(false);
-      return;
-    }
-    try {
-      setLoading(true);
-      const db = getFirebaseFirestore();
-      const q = query(collection(db, 'idosos'), where('responsavelId', '==', u.uid));
-      const snap = await getDocs(q);
-      setIdosos(
-        snap.docs.map((docSnap) => {
-          const d = docSnap.data();
-          return {
-            uid: docSnap.id,
-            nomeIdoso: String(d.nomeIdoso ?? ''),
-            cpf: String(d.cpf ?? ''),
-            dataNascimento: String(d.dataNascimento ?? ''),
-            fotoPerfil: d.fotoPerfil != null ? String(d.fotoPerfil) : null,
-            responsavelId: String(d.responsavelId ?? ''),
-          };
-        }),
-      );
-    } catch (e) {
-      Alert.alert('Erro', getAuthErrorMessage(e, 'email'));
-      setIdosos([]);
-    } finally {
-      setLoading(false);
-    }
+  React.useEffect(() => {
+    setLoading(true);
+    return subscribeIdososForCurrentResponsavel(
+      (nextIdosos) => {
+        setIdosos(nextIdosos);
+        setLoading(false);
+      },
+      (e) => {
+        Alert.alert('Erro', getAuthErrorMessage(e, 'email'));
+        setIdosos([]);
+        setLoading(false);
+      },
+    );
   }, []);
-
-  useFocusEffect(
-    React.useCallback(() => {
-      void loadIdosos();
-    }, [loadIdosos]),
-  );
 
   const openCreateModal = () => {
     setEditing(null);
@@ -133,19 +108,19 @@ export default function TelaPainelResponsavel() {
     const storageDate = displayDateToStorage(dataNasc.trim());
 
     if (!nome || cpfDigits.length !== 11 || !dataNasc.trim()) {
-      Alert.alert('Campos obrigatórios', 'Preencha nome, CPF e data de nascimento.');
+      Alert.alert('Campos obrigatórios', 'Preencha todos os campos.');
       return;
     }
     if (!storageDate) {
-      Alert.alert('Data', 'Informe uma data válida no formato DD/MM/AAAA.');
+      Alert.alert('Data', 'Digite uma data valida.');
       return;
     }
     if (!editing && senhaIdoso.length < 6) {
-      Alert.alert('Senha', 'A senha do idoso deve ter pelo menos 6 caracteres.');
+      Alert.alert('Senha', 'Use pelo menos 6 caracteres.');
       return;
     }
     if (!editing && senhaIdoso !== confirmSenhaIdoso) {
-      Alert.alert('Senha', 'As senhas do idoso não conferem. Digite a mesma senha nos dois campos.');
+      Alert.alert('Senha', 'As senhas nao sao iguais.');
       return;
     }
 
@@ -167,8 +142,7 @@ export default function TelaPainelResponsavel() {
         });
       }
       setModalVisible(false);
-      await loadIdosos();
-      Alert.alert('Sucesso', editing ? 'Perfil do idoso atualizado.' : 'Idoso cadastrado.');
+      Alert.alert('Tudo certo', editing ? 'Perfil atualizado.' : 'Idoso cadastrado.');
     } catch (e) {
       Alert.alert('Erro', getAuthErrorMessage(e, 'email'));
     } finally {

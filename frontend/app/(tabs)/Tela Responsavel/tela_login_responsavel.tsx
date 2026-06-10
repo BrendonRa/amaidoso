@@ -63,18 +63,18 @@ export default function HomeScreen() {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (!normalizedEmail || !password) {
-      const message = 'Preencha email e senha para continuar.';
+      const message = 'Preencha e-mail e senha.';
       openErrorModal('Campos obrigatórios', message);
       return;
     }
 
     if (password.length < 6) {
-      openErrorModal('Senha', 'A senha deve ter pelo menos 6 caracteres (Firebase).');
+      openErrorModal('Senha', 'Use pelo menos 6 caracteres.');
       return;
     }
 
     if (!isValidEmail(normalizedEmail)) {
-      const message = 'Digite um email válido para entrar.';
+      const message = 'Digite um e-mail valido.';
       openErrorModal('Email inválido', message);
       return;
     }
@@ -115,7 +115,7 @@ export default function HomeScreen() {
     if (!normalizedEmail || !password) {
       openErrorModal(
         'Campos obrigatórios',
-        'Preencha email e senha para reenviar o link de confirmação.',
+        'Preencha e-mail e senha.',
         true,
       );
       return;
@@ -130,10 +130,10 @@ export default function HomeScreen() {
       setResendFeedback('');
       await resendResponsavelEmailVerification(normalizedEmail, password);
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
-      setResendFeedback('Novo link enviado. Confira sua caixa de entrada e o spam.');
+      setResendFeedback('Novo link enviado.');
     } catch (error) {
       setResendFeedback('');
-      openErrorModal('Não foi possível reenviar', getAuthErrorMessage(error, 'email'), true);
+      openErrorModal('Erro', getAuthErrorMessage(error, 'email'), true);
     } finally {
       setIsResendingVerification(false);
     }
@@ -320,10 +320,8 @@ export default function HomeScreen() {
             <View style={styles.modalIconWrap}>
               <Text style={styles.modalIcon}>✓</Text>
             </View>
-            <Text style={styles.modalTitle}>Login realizado com sucesso</Text>
-            <Text style={styles.modalText}>
-              Seu acesso foi confirmado. Clique em continuar para entrar no app.
-            </Text>
+            <Text style={styles.modalTitle}>Login feito</Text>
+            <Text style={styles.modalText}>Pode continuar.</Text>
 
             <TouchableOpacity
               activeOpacity={0.85}

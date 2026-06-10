@@ -3,3 +3,4 @@ frontend/.expo/
 frontend/.env
 backend/node_modules/
 backend/.env
+.firebase/

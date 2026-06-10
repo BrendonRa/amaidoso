@@ -9,7 +9,7 @@ import {
   type Persistence,
 } from 'firebase/auth';
 import * as FirebaseAuth from 'firebase/auth';
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, type Firestore } from 'firebase/firestore';
 import { Platform } from 'react-native';
 
 import googleServices from '../google-services.json';
@@ -120,7 +120,18 @@ let db: Firestore | undefined;
 
 export function getFirebaseFirestore(): Firestore {
   if (!db) {
-    db = getFirestore(getFirebaseApp());
+    const app = getFirebaseApp();
+    if (Platform.OS === 'web') {
+      db = getFirestore(app);
+    } else {
+      try {
+        db = initializeFirestore(app, {
+          experimentalForceLongPolling: true,
+        });
+      } catch {
+        db = getFirestore(app);
+      }
+    }
   }
   return db;
 }
@@ -129,4 +140,5 @@ export function getFirebaseFirestore(): Firestore {
 export function initFirebase(): void {
   getFirebaseApp();
   getFirebaseAuth();
+  getFirebaseFirestore();
 }

@@ -27,6 +27,16 @@ type Frequency = 'Diário' | 'Semanal' | 'Mensal';
 type Unit = 'ml' | 'mg';
 type DateTimeMode = 'date' | 'time';
 
+const paperInputTheme = {
+  colors: {
+    onSurface: '#111827',
+    onSurfaceVariant: '#344054',
+    outline: '#667085',
+    primary: '#1456FF',
+    surface: '#FFFFFF',
+  },
+};
+
 function formatDateDisplay(date: Date) {
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -147,10 +157,13 @@ function DoseSelector({
         <PaperTextInput
           keyboardType="numeric"
           mode="outlined"
-          outlineColor="#E2E6F0"
+          outlineColor="#667085"
           activeOutlineColor="#1456FF"
           placeholder="Ex.: 500"
+          placeholderTextColor="#667085"
           style={styles.doseInput}
+          textColor="#111827"
+          theme={paperInputTheme}
           value={dose}
           onChangeText={(value) => onDoseChange(value.replace(/[^\d.,]/g, ''))}
         />
@@ -158,10 +171,23 @@ function DoseSelector({
           value={unit}
           onValueChange={(value) => onUnitChange(value as Unit)}
           buttons={[
-            { value: 'ml', label: 'ml' },
-            { value: 'mg', label: 'mg' },
+            {
+              value: 'ml',
+              label: 'ml',
+              checkedColor: '#FFFFFF',
+              uncheckedColor: '#111827',
+              labelStyle: styles.segmentedLabel,
+            },
+            {
+              value: 'mg',
+              label: 'mg',
+              checkedColor: '#FFFFFF',
+              uncheckedColor: '#111827',
+              labelStyle: styles.segmentedLabel,
+            },
           ]}
           style={styles.unitButtons}
+          theme={paperInputTheme}
         />
       </View>
     </View>
@@ -182,7 +208,7 @@ export default function TelaCadastrarMedicacaoResponsavel() {
 
   const handleConfirm = async () => {
     if (!uid) {
-      Alert.alert('Idoso não encontrado', 'Volte para a tela anterior e selecione um idoso.');
+      Alert.alert('Idoso não encontrado', 'Selecione um idoso.');
       return;
     }
 
@@ -192,7 +218,7 @@ export default function TelaCadastrarMedicacaoResponsavel() {
     }
 
     if (usoContinuo && !frequencia) {
-      Alert.alert('Frequência obrigatória', 'Escolha a frequência do uso contínuo.');
+      Alert.alert('Frequência obrigatória', 'Escolha a frequencia.');
       return;
     }
 
@@ -221,10 +247,10 @@ export default function TelaCadastrarMedicacaoResponsavel() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.keyboardView}>
-        <View style={styles.screen}>
+      <View style={styles.screen}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keyboardView}>
           <ScrollView
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -240,9 +266,12 @@ export default function TelaCadastrarMedicacaoResponsavel() {
               <PaperTextInput
                 label="Nome do medicamento"
                 mode="outlined"
-                outlineColor="#E2E6F0"
+                outlineColor="#667085"
                 activeOutlineColor="#1456FF"
+                placeholderTextColor="#667085"
                 style={styles.paperInput}
+                textColor="#111827"
+                theme={paperInputTheme}
                 value={nomeMedicamento}
                 onChangeText={setNomeMedicamento}
               />
@@ -284,10 +313,30 @@ export default function TelaCadastrarMedicacaoResponsavel() {
                     value={frequencia}
                     onValueChange={(value) => setFrequencia(value as Frequency)}
                     buttons={[
-                      { value: 'Diário', label: 'Diário' },
-                      { value: 'Semanal', label: 'Semanal' },
-                      { value: 'Mensal', label: 'Mensal' },
+                      {
+                        value: 'Diário',
+                        label: 'Diário',
+                        checkedColor: '#FFFFFF',
+                        uncheckedColor: '#111827',
+                        labelStyle: styles.segmentedLabel,
+                      },
+                      {
+                        value: 'Semanal',
+                        label: 'Semanal',
+                        checkedColor: '#FFFFFF',
+                        uncheckedColor: '#111827',
+                        labelStyle: styles.segmentedLabel,
+                      },
+                      {
+                        value: 'Mensal',
+                        label: 'Mensal',
+                        checkedColor: '#FFFFFF',
+                        uncheckedColor: '#111827',
+                        labelStyle: styles.segmentedLabel,
+                      },
                     ]}
+                    style={styles.segmentedButtons}
+                    theme={paperInputTheme}
                   />
                 </View>
               ) : null}
@@ -314,7 +363,9 @@ export default function TelaCadastrarMedicacaoResponsavel() {
             </View>
           </ScrollView>
 
-          <View style={styles.bottomBar}>
+        </KeyboardAvoidingView>
+
+        <View style={styles.bottomBar}>
             <TouchableOpacity activeOpacity={0.6} style={styles.navItem}>
               <View style={styles.activePill}>
                 <Feather name="edit-3" size={24} color="#121212" />
@@ -335,11 +386,10 @@ export default function TelaCadastrarMedicacaoResponsavel() {
               onPress={() => router.push('./tela_config_responsavel')}
               style={styles.navItem}>
               <Feather name="settings" size={24} color="#121212" />
-              <Text style={styles.navLabel}>Configurações</Text>
+              <Text style={styles.navLabel}>Configuracoes</Text>
             </TouchableOpacity>
-          </View>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -395,6 +445,8 @@ const styles = StyleSheet.create({
     minHeight: 58,
     marginBottom: 16,
     backgroundColor: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
   sectionTitle: {
     marginTop: 2,
@@ -460,9 +512,18 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 58,
     backgroundColor: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
   unitButtons: {
     flex: 1.35,
+  },
+  segmentedButtons: {
+    backgroundColor: '#FFFFFF',
+  },
+  segmentedLabel: {
+    fontSize: 13,
+    fontWeight: '800',
   },
   confirmButton: {
     alignSelf: 'center',

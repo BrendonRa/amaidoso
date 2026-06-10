@@ -6,6 +6,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
 
+import { AppAlertProvider } from '@/components/app-alert';
 import { IdosoProfileProvider } from '@/contexts/idoso-profile-context';
 import { ResponsavelProfileProvider } from '@/contexts/responsavel-profile-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -34,15 +35,17 @@ export default function RootLayout() {
       <PaperProvider>
         <ResponsavelProfileProvider>
           <IdosoProfileProvider>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                animation: 'fade',
-                animationDuration: 220,
-              }}>
-              <Stack.Screen name="(tabs)" />
-            </Stack>
-            <StatusBar style="auto" />
+            <AppAlertProvider>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  animation: 'fade',
+                  animationDuration: 220,
+                }}>
+                <Stack.Screen name="(tabs)" />
+              </Stack>
+              <StatusBar style="auto" />
+            </AppAlertProvider>
           </IdosoProfileProvider>
         </ResponsavelProfileProvider>
       </PaperProvider>

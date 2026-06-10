@@ -61,13 +61,13 @@ export default function TelaLoginIdoso() {
 
   const handleEntrar = async () => {
     if (!cpf.trim() || !senha) {
-      const message = 'Preencha CPF e senha para continuar.';
+      const message = 'Preencha CPF e senha.';
       openErrorModal('Campos obrigatórios', message);
       return;
     }
 
     if (cpf.trim().length !== 11) {
-      const message = 'Digite um CPF com 11 números para entrar.';
+      const message = 'Digite os 11 numeros do CPF.';
       openErrorModal('CPF inválido', message);
       return;
     }
@@ -207,10 +207,8 @@ export default function TelaLoginIdoso() {
             <View style={styles.modalSuccessIconWrap}>
               <Text style={styles.modalSuccessIcon}>✓</Text>
             </View>
-            <Text style={styles.modalTitle}>Login realizado com sucesso</Text>
-            <Text style={styles.modalText}>
-              Seu acesso foi confirmado. Clique em continuar para entrar no app.
-            </Text>
+            <Text style={styles.modalTitle}>Login feito</Text>
+            <Text style={styles.modalText}>Pode continuar.</Text>
 
             <TouchableOpacity
               activeOpacity={0.85}

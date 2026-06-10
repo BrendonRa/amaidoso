@@ -1,9 +1,8 @@
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, router } from 'expo-router';
+import { router } from 'expo-router';
 import React from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   KeyboardAvoidingView,
@@ -23,11 +22,13 @@ import {
   formatDateForStorage,
   parseDateDisplay,
 } from '@/components/birth-date-input';
+import { useAppAlert } from '@/components/app-alert';
 import { useResponsavelProfile } from '@/contexts/responsavel-profile-context';
 import { createIdosoForResponsavel, getAuthErrorMessage } from '@/lib/firebase-auth-service';
-import { listIdososForCurrentResponsavel, type IdosoResumo } from '@/lib/idoso-data-service';
+import { subscribeIdososForCurrentResponsavel, type IdosoResumo } from '@/lib/idoso-data-service';
 
 export default function TelaHomeResponsavel() {
+  const { showError, showSuccess, showWarning } = useAppAlert();
   const { profile } = useResponsavelProfile();
   const [idosos, setIdosos] = React.useState<IdosoResumo[] | null>(null);
   const [modalVisible, setModalVisible] = React.useState(false);
@@ -38,19 +39,9 @@ export default function TelaHomeResponsavel() {
   const [confirmSenhaIdoso, setConfirmSenhaIdoso] = React.useState('');
   const [saving, setSaving] = React.useState(false);
 
-  const loadIdosos = React.useCallback(async () => {
-    try {
-      setIdosos(await listIdososForCurrentResponsavel());
-    } catch {
-      setIdosos([]);
-    }
+  React.useEffect(() => {
+    return subscribeIdososForCurrentResponsavel(setIdosos, () => setIdosos([]));
   }, []);
-
-  useFocusEffect(
-    React.useCallback(() => {
-      void loadIdosos();
-    }, [loadIdosos]),
-  );
 
   const formatCpfDisplay = (digits: string) => {
     const d = digits.replace(/\D/g, '').slice(0, 11);
@@ -81,19 +72,19 @@ export default function TelaHomeResponsavel() {
     const birthDate = parseDateDisplay(dataNasc.trim());
 
     if (!nome || cpfDigits.length !== 11 || !dataNasc.trim() || !senhaIdoso || !confirmSenhaIdoso) {
-      Alert.alert('Campos obrigatórios', 'Preencha nome, CPF (11 dígitos), data de nascimento e os dois campos de senha.');
+      showWarning('Campos obrigatórios', 'Preencha todos os campos.');
       return;
     }
     if (senhaIdoso.length < 6) {
-      Alert.alert('Senha', 'A senha do idoso deve ter pelo menos 6 caracteres (regra do Firebase).');
+      showWarning('Senha', 'Use pelo menos 6 caracteres.');
       return;
     }
     if (senhaIdoso !== confirmSenhaIdoso) {
-      Alert.alert('Senha', 'As senhas do idoso não conferem. Digite a mesma senha nos dois campos.');
+      showWarning('Senha', 'As senhas nao sao iguais.');
       return;
     }
     if (!birthDate) {
-      Alert.alert('Data', 'Informe uma data válida no formato DD/MM/AAAA.');
+      showWarning('Data', 'Digite uma data valida.');
       return;
     }
 
@@ -111,10 +102,9 @@ export default function TelaHomeResponsavel() {
       setDataNasc('');
       setSenhaIdoso('');
       setConfirmSenhaIdoso('');
-      await loadIdosos();
-      Alert.alert('Sucesso', 'Idoso cadastrado. Ele já pode entrar com CPF e senha na tela de login do idoso.');
+      showSuccess('Tudo certo', 'Idoso cadastrado.');
     } catch (e) {
-      Alert.alert('Erro', getAuthErrorMessage(e, 'email'));
+      showError('Erro', getAuthErrorMessage(e, 'email'));
     } finally {
       setSaving(false);
     }
@@ -224,7 +214,7 @@ export default function TelaHomeResponsavel() {
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Cadastrar idoso</Text>
             <Text style={styles.modalHint}>
-              O idoso entra no app com CPF e senha. A conta é criada no Firebase (e-mail técnico por CPF).
+              O idoso vai entrar com CPF e senha.
             </Text>
             <TextInput
               placeholder="Nome completo"

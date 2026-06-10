@@ -4,7 +4,7 @@ import React from 'react';
 import { ActivityIndicator, Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { useIdosoProfile } from '@/contexts/idoso-profile-context';
-import { listLembretes, type Lembrete } from '@/lib/idoso-data-service';
+import { subscribeLembretes, type Lembrete } from '@/lib/idoso-data-service';
 import IdosoBottomNav from './IdosoBottomNav';
 
 export default function LembretesScreen() {
@@ -14,9 +14,10 @@ export default function LembretesScreen() {
   React.useEffect(() => {
     if (!profile?.uid) {
       setLembretes([]);
-      return;
+      return undefined;
     }
-    void listLembretes(profile.uid).then(setLembretes).catch(() => setLembretes([]));
+
+    return subscribeLembretes(profile.uid, setLembretes, () => setLembretes([]));
   }, [profile?.uid]);
 
   const firstName = profile?.nome?.split(' ')[0] || 'Idoso';

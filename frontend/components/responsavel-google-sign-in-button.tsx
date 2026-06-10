@@ -1,6 +1,7 @@
 import * as Google from 'expo-auth-session/providers/google';
+import { Image } from 'expo-image';
 import React from 'react';
-import { Alert, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import {
   getAuthErrorMessage,
@@ -108,15 +109,7 @@ export function ResponsavelGoogleSignInButton({
       return;
     }
     if (isRunningInExpoGo()) {
-      Alert.alert(
-        'Google no Expo Go',
-        'O Google bloqueia o login quando o app usa o Expo Go (redirecionamento exp://). Isso não se resolve só no Firebase.\n\n' +
-          'Use a versão web (tecla w no terminal do Expo) ou gere um development build no aparelho:\n' +
-          'npx expo install expo-dev-client\n' +
-          'npx expo run:android\n\n' +
-          'Depois, no Google Cloud Console → Credenciais → seu OAuth cliente Web, em "URIs de redirecionamento autorizados", ' +
-          'adicione a mesma URI que o app usa (no build instalado costuma ser algo como amaidoso://oauth — veja o aviso no console ao abrir o app em modo dev).',
-      );
+      onError('O login com Google não está disponível no Expo Go. Use e-mail e senha neste ambiente.');
       return;
     }
     if (!request) {
@@ -153,13 +146,15 @@ export function ResponsavelGoogleSignInButton({
         disabled={buttonDisabled}
         onPress={() => void handlePress()}
         style={styles.googleButton}>
+        <Image
+          source={require('../assets/images/google-icon-logo.svg')}
+          style={styles.googleIcon}
+          contentFit="contain"
+        />
         <Text style={styles.googleButtonText}>{label}</Text>
       </TouchableOpacity>
       {Platform.OS !== 'web' ? (
-        <Text style={styles.hint}>
-          No celular com build instalado (não Expo Go): cadastre no Google Cloud a mesma URI de redirecionamento que o app
-          envia (veja o console em modo dev). Firebase: ative o provedor Google e, se precisar, inclua o domínio do redirect.
-        </Text>
+        <Text style={styles.hint}>Tambem pode entrar com e-mail e senha.</Text>
       ) : null}
     </View>
   );
@@ -176,8 +171,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#C8C8C8',
     backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 8,
+  },
+  googleIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
   },
   googleButtonText: {
     fontSize: 16,

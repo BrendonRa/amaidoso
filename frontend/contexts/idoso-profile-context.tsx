@@ -1,4 +1,8 @@
 import React from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+
+import { getFirebaseAuth } from '@/lib/firebase';
+import { subscribeIdosoByUid } from '@/lib/idoso-data-service';
 
 export type IdosoProfile = {
   uid: string;
@@ -20,6 +24,63 @@ const IdosoProfileContext = React.createContext<IdosoProfileContextValue | undef
 
 export function IdosoProfileProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = React.useState<IdosoProfile | null>(null);
+  const profileUid = profile?.uid;
+
+  React.useEffect(() => {
+    let unsubscribeProfile: (() => void) | undefined;
+
+    const unsubscribeAuth = onAuthStateChanged(getFirebaseAuth(), (user) => {
+      unsubscribeProfile?.();
+      unsubscribeProfile = undefined;
+
+      if (!user) {
+        setProfile(null);
+        return;
+      }
+
+      unsubscribeProfile = subscribeIdosoByUid(user.uid, (idoso) => {
+        if (!idoso) {
+          return;
+        }
+
+        setProfile({
+          uid: idoso.uid,
+          nome: idoso.nomeIdoso,
+          cpf: idoso.cpf,
+          dataNascimento: idoso.dataNascimento,
+          fotoPerfil: idoso.fotoPerfil,
+          responsavelId: idoso.responsavelId,
+        });
+      });
+    });
+
+    return () => {
+      unsubscribeProfile?.();
+      unsubscribeAuth();
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (!profileUid) {
+      return undefined;
+    }
+
+    return subscribeIdosoByUid(profileUid, (idoso) => {
+      if (!idoso) {
+        setProfile(null);
+        return;
+      }
+
+      setProfile({
+        uid: idoso.uid,
+        nome: idoso.nomeIdoso,
+        cpf: idoso.cpf,
+        dataNascimento: idoso.dataNascimento,
+        fotoPerfil: idoso.fotoPerfil,
+        responsavelId: idoso.responsavelId,
+      });
+    });
+  }, [profileUid]);
 
   const updateProfile = React.useCallback((updates: Partial<IdosoProfile>) => {
     setProfile((current) => (current ? { ...current, ...updates } : null));
