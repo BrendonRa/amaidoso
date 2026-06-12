@@ -35,7 +35,7 @@ export default function TelaRecuperarSenhaCodigoResponsavel() {
           </TouchableOpacity>
 
           <Image
-            source={require('../../../assets/images/logo.jpeg')}
+            source={require('../../../assets/images/amaidoso-escrito.png')}
             style={styles.logo}
             contentFit="contain"
           />

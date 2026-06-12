@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "29887422062-5q0hraa464hau18n639o2me3k907dhtf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.amaidoso.app",
+            "certificate_hash": "7b7bcbfe43e35b248b0a5d917f5b411a3269ad93"
+          }
+        },
+        {
           "client_id": "29887422062-b6c7hjlqbbbbka8f8fn5lnd9ns4ald40.apps.googleusercontent.com",
           "client_type": 3
         }

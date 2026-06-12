@@ -1,13 +1,14 @@
-import { View, Image, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 
 export default function TelaInicio() {
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
 
       <Image
-        source={require('../../../assets/images/logo.jpeg')}
+        source={require('../../../assets/images/amaidoso-escrito.png')}
         style={styles.logo}
       />
 
@@ -26,7 +27,7 @@ export default function TelaInicio() {
         </LinearGradient>
       </TouchableOpacity>
 
-    </View>
+    </SafeAreaView>
   );
 }
 

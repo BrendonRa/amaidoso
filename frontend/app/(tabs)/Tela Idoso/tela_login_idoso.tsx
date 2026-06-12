@@ -14,8 +14,11 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PasswordInput } from '@/components/password-input';
 import { useIdosoProfile } from '@/contexts/idoso-profile-context';
+import { useLanguage } from '@/contexts/language-context';
 import { getAuthErrorMessage, loginIdosoFirebase } from '@/lib/firebase-auth-service';
+import { setLastSessionRole } from '@/lib/session-preferences';
 
 export default function TelaLoginIdoso() {
   const [cpf, setCpf] = React.useState('');
@@ -26,6 +29,7 @@ export default function TelaLoginIdoso() {
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { setProfile } = useIdosoProfile();
+  const { t } = useLanguage();
 
   const formatCpf = (value: string) => {
     const digits = value.replace(/\D/g, '').slice(0, 11);
@@ -61,14 +65,14 @@ export default function TelaLoginIdoso() {
 
   const handleEntrar = async () => {
     if (!cpf.trim() || !senha) {
-      const message = 'Preencha CPF e senha.';
-      openErrorModal('Campos obrigatórios', message);
+      const message = t('Preencha CPF e senha.');
+      openErrorModal(t('Campos obrigatórios'), message);
       return;
     }
 
     if (cpf.trim().length !== 11) {
-      const message = 'Digite os 11 numeros do CPF.';
-      openErrorModal('CPF inválido', message);
+      const message = t('Digite os 11 numeros do CPF.');
+      openErrorModal(t('CPF inválido'), message);
       return;
     }
 
@@ -78,6 +82,7 @@ export default function TelaLoginIdoso() {
       setIsSubmitting(true);
 
       const user = await loginIdosoFirebase(cpf.trim(), senha);
+      await setLastSessionRole('idoso');
       setProfile({
         uid: user.uid,
         nome: user.nome,
@@ -89,7 +94,7 @@ export default function TelaLoginIdoso() {
 
       setShowSuccessModal(true);
     } catch (error) {
-      openErrorModal('Erro no login', getAuthErrorMessage(error, 'email'));
+      openErrorModal(t('Erro no login'), t(getAuthErrorMessage(error, 'email')));
     } finally {
       setIsSubmitting(false);
     }
@@ -110,18 +115,18 @@ export default function TelaLoginIdoso() {
             activeOpacity={0.7}
             onPress={() => router.back()}
             style={styles.backButton}>
-            <Text style={styles.backButtonText}>Voltar</Text>
+            <Text style={styles.backButtonText}>{t('Voltar')}</Text>
           </TouchableOpacity>
 
           <Image
-            source={require('../../../assets/images/logo.jpeg')}
+            source={require('../../../assets/images/amaidoso-escrito.png')}
             style={styles.logo}
             contentFit="contain"
           />
 
-          <Text style={styles.title}>Entre Agora</Text>
+          <Text style={styles.title}>{t('Entre Agora')}</Text>
           <Text style={styles.subtitle}>
-            Por favor entre na sua conta para{'\n'}continuar usando nosso app
+            {t('Por favor entre na sua conta para')}{'\n'}{t('continuar usando nosso app')}
           </Text>
 
           <View style={styles.form}>
@@ -135,17 +140,16 @@ export default function TelaLoginIdoso() {
               value={formatCpf(cpf)}
             />
 
-            <TextInput
+            <PasswordInput
               onChangeText={(value) => {
                 setSenha(value);
                 if (showErrorModal) {
                   setShowErrorModal(false);
                 }
               }}
-              placeholder="Senha"
-              placeholderTextColor="#737373"
-              secureTextEntry
-              style={styles.input}
+              placeholder={t('Senha')}
+              fieldStyle={styles.input}
+              inputStyle={styles.passwordInputText}
               value={senha}
             />
 
@@ -165,7 +169,7 @@ export default function TelaLoginIdoso() {
                 end={{ x: 1, y: 0.5 }}
                 start={{ x: 0, y: 0.5 }}
                 style={styles.button}>
-                <Text style={styles.buttonText}>{isSubmitting ? 'Entrando...' : 'Entrar'}</Text>
+                <Text style={styles.buttonText}>{isSubmitting ? t('Entrando...') : t('Entrar')}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -190,7 +194,7 @@ export default function TelaLoginIdoso() {
               activeOpacity={0.85}
               onPress={() => setShowErrorModal(false)}
               style={styles.modalErrorButton}>
-              <Text style={styles.modalButtonText}>Fechar</Text>
+              <Text style={styles.modalButtonText}>{t('Fechar')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -207,14 +211,14 @@ export default function TelaLoginIdoso() {
             <View style={styles.modalSuccessIconWrap}>
               <Text style={styles.modalSuccessIcon}>✓</Text>
             </View>
-            <Text style={styles.modalTitle}>Login feito</Text>
-            <Text style={styles.modalText}>Pode continuar.</Text>
+            <Text style={styles.modalTitle}>{t('Login feito')}</Text>
+            <Text style={styles.modalText}>{t('Pode continuar.')}</Text>
 
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleContinue}
               style={styles.modalSuccessButton}>
-              <Text style={styles.modalButtonText}>Continuar</Text>
+              <Text style={styles.modalButtonText}>{t('Continuar')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -287,6 +291,10 @@ const styles = StyleSheet.create({
     color: '#151515',
     backgroundColor: '#FFFFFF',
     marginBottom: 14,
+  },
+  passwordInputText: {
+    fontSize: 15,
+    color: '#151515',
   },
   errorBox: {
     borderRadius: 14,

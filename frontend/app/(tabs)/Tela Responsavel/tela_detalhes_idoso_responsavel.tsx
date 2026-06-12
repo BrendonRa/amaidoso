@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView, SafeAreaView as SafeAreaInsetsView } from 'react-native-safe-area-context';
 
 import { getAuthErrorMessage } from '@/lib/firebase-auth-service';
 import {
@@ -102,21 +102,23 @@ export default function TelaDetalhesIdosoResponsavel() {
     idoso?.fotoPerfil && idoso.fotoPerfil !== 'imagem_padrao.png' ? idoso.fotoPerfil : null;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['left', 'right']} style={styles.safeArea}>
       <View style={styles.screen}>
-      <View style={styles.header}>
-        <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={styles.backButton}>
-          <Feather name="arrow-left" size={22} color="#FFFFFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{idoso?.nomeIdoso || 'Cuidados do idoso'}</Text>
-        <View style={styles.avatar}>
-          {photoUri ? (
-            <Image source={{ uri: photoUri }} style={styles.avatarImage} />
-          ) : (
-            <Ionicons name="person" size={22} color="#1456FF" />
-          )}
-        </View>
-      </View>
+        <SafeAreaInsetsView edges={['top']} style={styles.headerSafeArea}>
+          <View style={styles.header}>
+            <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={styles.backButton}>
+              <Feather name="arrow-left" size={22} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>{idoso?.nomeIdoso || 'Cuidados do idoso'}</Text>
+            <View style={styles.avatar}>
+              {photoUri ? (
+                <Image source={{ uri: photoUri }} style={styles.avatarImage} />
+              ) : (
+                <Ionicons name="person" size={22} color="#1456FF" />
+              )}
+            </View>
+          </View>
+        </SafeAreaInsetsView>
 
       {loading ? (
         <View style={styles.loading}>
@@ -262,9 +264,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
+  headerSafeArea: {
+    backgroundColor: '#1456FF',
+  },
   header: {
     minHeight: 84,
-    backgroundColor: '#1456FF',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,

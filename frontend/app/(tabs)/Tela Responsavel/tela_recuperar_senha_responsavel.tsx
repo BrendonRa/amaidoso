@@ -64,7 +64,7 @@ export default function TelaRecuperarSenhaResponsavel() {
             <Text style={styles.backButtonText}>Voltar</Text>
           </TouchableOpacity>
           <Image
-            source={require('../../../assets/images/logo.jpeg')}
+            source={require('../../../assets/images/amaidoso-escrito.png')}
             style={styles.logo}
             contentFit="contain"
           />

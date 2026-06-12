@@ -11,7 +11,7 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   updatePassword,
-  updateProfile,
+  updateProfile as updateFirebaseAuthProfile,
   verifyBeforeUpdateEmail,
   type User,
   type UserCredential,
@@ -137,10 +137,12 @@ export async function registerResponsavelFirebase(
   const auth = getFirebaseAuth();
   const db = getFirebaseFirestore();
   const cred = await createUserWithEmailAndPassword(auth, email, password);
-  await updateProfile(cred.user, { displayName: nome });
+  await updateFirebaseAuthProfile(cred.user, { displayName: nome });
   await sendEmailVerification(cred.user);
   void setDoc(doc(db, 'responsaveis', cred.user.uid), {
     nomeResponsavel: nome,
+    usuario: nome,
+    nascimento: '',
     email,
     emailVerificado: false,
     fotoPerfil: 'imagem_padrao.png',
@@ -348,13 +350,13 @@ export async function loginResponsavelFirebase(
       createdAt: serverTimestamp(),
     }).catch((e) => {
       if (__DEV__) {
-        // eslint-disable-next-line no-console
+         
         console.warn('[Firebase] Login ok, mas não foi possível criar o perfil do responsável no Firestore.', e);
       }
     });
   } catch (e) {
     if (__DEV__) {
-      // eslint-disable-next-line no-console
+       
       console.warn('[Firebase] Login ok, mas não foi possível ler o perfil do responsável no Firestore.', e);
     }
   }
@@ -370,6 +372,46 @@ export async function sendResponsavelPasswordResetEmail(email: string): Promise<
     throw { code: 'auth/invalid-email' };
   }
   await sendPasswordResetEmail(auth, normalized);
+}
+
+export type UpdateResponsavelProfileInput = {
+  nome: string;
+  usuario: string;
+  nascimento: string;
+  fotoPerfil?: string | null;
+};
+
+export async function updateCurrentResponsavelProfile(
+  input: UpdateResponsavelProfileInput,
+): Promise<void> {
+  const auth = getFirebaseAuth();
+  const responsavel = auth.currentUser;
+  if (!responsavel) {
+    throw new Error('Faça login para editar seu perfil.');
+  }
+
+  const nome = input.nome.trim();
+  const usuario = input.usuario.trim();
+  const nascimento = input.nascimento.trim();
+  const fotoPerfil = input.fotoPerfil || 'imagem_padrao.png';
+  const db = getFirebaseFirestore();
+
+  await setDoc(
+    doc(db, 'responsaveis', responsavel.uid),
+    {
+      nomeResponsavel: nome,
+      usuario,
+      nascimento,
+      email: responsavel.email ?? '',
+      fotoPerfil,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
+
+  if (responsavel.displayName !== nome) {
+    await updateFirebaseAuthProfile(responsavel, { displayName: nome });
+  }
 }
 
 export async function loginIdosoFirebase(

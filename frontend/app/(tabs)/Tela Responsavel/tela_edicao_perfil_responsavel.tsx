@@ -7,7 +7,6 @@ import {
   Image,
   Modal,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,12 +14,15 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useResponsavelProfile } from '@/contexts/responsavel-profile-context';
+import { PasswordInput, PasswordVisibilityToggle } from '@/components/password-input';
 import {
   getCurrentResponsavelAuthProvider,
   getAuthErrorMessage,
   requestResponsavelEmailChange,
+  updateCurrentResponsavelProfile,
 } from '@/lib/firebase-auth-service';
 import { BirthDateInput } from '@/components/birth-date-input';
 
@@ -32,6 +34,7 @@ export default function TelaEdicaoPerfilResponsavel() {
   const [currentPassword, setCurrentPassword] = React.useState('');
   const [newPassword, setNewPassword] = React.useState('');
   const [confirmNewPassword, setConfirmNewPassword] = React.useState('');
+  const [showNewPasswords, setShowNewPasswords] = React.useState(false);
   const [formError, setFormError] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const authProvider =
@@ -53,11 +56,16 @@ export default function TelaEdicaoPerfilResponsavel() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.7,
+      base64: true,
+      quality: 0.45,
     });
 
     if (!result.canceled && result.assets.length > 0) {
-      updateProfile({ photoUri: result.assets[0].uri });
+      const asset = result.assets[0];
+      const photoValue = asset.base64
+        ? `data:${asset.mimeType ?? 'image/jpeg'};base64,${asset.base64}`
+        : asset.uri;
+      updateProfile({ photoUri: photoValue });
     }
   }
 
@@ -107,6 +115,13 @@ export default function TelaEdicaoPerfilResponsavel() {
 
     try {
       setIsSubmitting(true);
+
+      await updateCurrentResponsavelProfile({
+        nome: profile.nome,
+        usuario: profile.usuario,
+        nascimento: profile.nascimento,
+        fotoPerfil: profile.photoUri,
+      });
 
       if (normalizedNewEmail !== currentEmail) {
         await requestResponsavelEmailChange(
@@ -224,7 +239,7 @@ export default function TelaEdicaoPerfilResponsavel() {
             {shouldAskCurrentPassword ? (
               <View style={styles.fieldBlock}>
                 <Text style={styles.label}>Senha atual para alterar e-mail</Text>
-                <TextInput
+                <PasswordInput
                   onChangeText={(value) => {
                     setCurrentPassword(value);
                     if (formError) {
@@ -233,8 +248,9 @@ export default function TelaEdicaoPerfilResponsavel() {
                   }}
                   placeholder="Digite sua senha atual"
                   placeholderTextColor="#777777"
-                  secureTextEntry
-                  style={styles.input}
+                  fieldStyle={styles.input}
+                  inputStyle={styles.passwordInputText}
+                  iconColor="#777777"
                   value={currentPassword}
                 />
               </View>
@@ -247,7 +263,7 @@ export default function TelaEdicaoPerfilResponsavel() {
                 <Text style={styles.passwordSetupText}>
                   Use esta senha no proximo login.
                 </Text>
-                <TextInput
+                <PasswordInput
                   onChangeText={(value) => {
                     setNewPassword(value);
                     if (formError) {
@@ -256,11 +272,15 @@ export default function TelaEdicaoPerfilResponsavel() {
                   }}
                   placeholder="Nova senha (min. 6 caracteres)"
                   placeholderTextColor="#777777"
-                  secureTextEntry
-                  style={[styles.input, styles.passwordInput]}
+                  containerStyle={styles.passwordInput}
+                  fieldStyle={styles.input}
+                  inputStyle={styles.passwordInputText}
+                  iconColor="#777777"
+                  showToggle={false}
+                  visible={showNewPasswords}
                   value={newPassword}
                 />
-                <TextInput
+                <PasswordInput
                   onChangeText={(value) => {
                     setConfirmNewPassword(value);
                     if (formError) {
@@ -269,9 +289,19 @@ export default function TelaEdicaoPerfilResponsavel() {
                   }}
                   placeholder="Confirmar nova senha"
                   placeholderTextColor="#777777"
-                  secureTextEntry
-                  style={styles.input}
+                  containerStyle={styles.confirmPasswordInput}
+                  fieldStyle={styles.input}
+                  inputStyle={styles.passwordInputText}
+                  iconColor="#777777"
+                  showToggle={false}
+                  visible={showNewPasswords}
                   value={confirmNewPassword}
+                />
+                <PasswordVisibilityToggle
+                  iconColor="#777777"
+                  visible={showNewPasswords}
+                  onPress={() => setShowNewPasswords((current) => !current)}
+                  style={styles.sharedPasswordToggle}
                 />
               </View>
             ) : (
@@ -550,6 +580,16 @@ const styles = StyleSheet.create({
   },
   passwordInput: {
     marginBottom: 8,
+  },
+  confirmPasswordInput: {
+    marginBottom: 0,
+  },
+  sharedPasswordToggle: {
+    marginBottom: 8,
+  },
+  passwordInputText: {
+    fontSize: 15,
+    color: '#151515',
   },
   errorBox: {
     borderRadius: 12,

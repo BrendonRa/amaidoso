@@ -3,15 +3,16 @@ import IdosoBottomNav from './IdosoBottomNav';
 import {
   Image,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView, SafeAreaView as SafeAreaInsetsView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useIdosoProfile } from '@/contexts/idoso-profile-context';
+import { useLanguage } from '@/contexts/language-context';
 
 type TutorialStep = {
   body: string;
@@ -47,11 +48,12 @@ const tutorialSteps: TutorialStep[] = [
 export default function TelaTutorialIdoso() {
   const [stepIndex, setStepIndex] = React.useState(0);
   const { profile } = useIdosoProfile();
+  const { t } = useLanguage();
 
   const currentStep = tutorialSteps[stepIndex];
   const isLastStep = stepIndex === tutorialSteps.length - 1;
   const isWelcomeStep = stepIndex === 0;
-  const firstName = profile?.nome?.split(' ')[0] || 'Idoso';
+  const firstName = profile?.nome?.split(' ')[0] || t('senior');
   const photoUri =
     profile?.fotoPerfil && profile.fotoPerfil !== 'imagem_padrao.png' ? profile.fotoPerfil : null;
 
@@ -69,32 +71,36 @@ export default function TelaTutorialIdoso() {
   }, [goNext]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Ola, {firstName}</Text>
+    <SafeAreaView edges={['left', 'right']} style={styles.container}>
+      <SafeAreaInsetsView edges={['top']} style={styles.headerSafeArea}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>{t('Ola')}, {firstName}</Text>
 
-        <Pressable style={styles.avatarContainer}>
-          {photoUri ? (
-            <Image source={{ uri: photoUri }} style={styles.avatar} />
-          ) : (
-            <Ionicons name="person" size={22} color="#F58220" />
-          )}
-        </Pressable>
-      </View>
+          <Pressable style={styles.avatarContainer}>
+            {photoUri ? (
+              <Image source={{ uri: photoUri }} style={styles.avatar} />
+            ) : (
+              <Ionicons name="person" size={22} color="#F58220" />
+            )}
+          </Pressable>
+        </View>
+      </SafeAreaInsetsView>
 
       <View style={styles.content}>
         <View style={[styles.card, isWelcomeStep && styles.welcomeCard, isLastStep && styles.finalCard]}>
-          <Text style={[styles.cardText, isWelcomeStep && styles.welcomeText]}>{currentStep.body}</Text>
+          <Text style={[styles.cardText, isWelcomeStep && styles.welcomeText]}>
+            {t(currentStep.body)}
+          </Text>
 
           <View style={[styles.actionsRow, !currentStep.secondaryLabel && styles.actionsCenter]}>
             {currentStep.secondaryLabel ? (
               <TouchableOpacity activeOpacity={0.7} onPress={handleSecondaryAction}>
-                <Text style={styles.secondaryText}>{currentStep.secondaryLabel}</Text>
+                <Text style={styles.secondaryText}>{t(currentStep.secondaryLabel)}</Text>
               </TouchableOpacity>
             ) : null}
 
             <TouchableOpacity activeOpacity={0.8} onPress={goNext} style={styles.primaryButton}>
-              <Text style={styles.primaryButtonText}>{currentStep.primaryLabel}</Text>
+              <Text style={styles.primaryButtonText}>{t(currentStep.primaryLabel)}</Text>
             </TouchableOpacity>
           </View>
 
@@ -109,6 +115,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F2F2F2',
+  },
+  headerSafeArea: {
+    backgroundColor: '#F58220',
   },
   header: {
     height: 76,

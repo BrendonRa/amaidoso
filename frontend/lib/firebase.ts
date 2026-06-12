@@ -20,10 +20,10 @@ type GoogleServicesJson = {
     project_id: string;
     storage_bucket: string;
   };
-  client: Array<{
+  client: {
     client_info: { mobilesdk_app_id: string };
-    api_key: Array<{ current_key: string }>;
-  }>;
+    api_key: { current_key: string }[];
+  }[];
 };
 
 const gs = googleServices as GoogleServicesJson;
@@ -51,7 +51,7 @@ function buildFirebaseConfig() {
       : '';
   const appId = Platform.OS === 'web' && webAppId ? webAppId : androidAppId;
   if (Platform.OS === 'web' && !webAppId && __DEV__) {
-    // eslint-disable-next-line no-console
+     
     console.warn(
       '[Firebase] Na web, defina EXPO_PUBLIC_FIREBASE_WEB_APP_ID (Console → Configurações do projeto → Seus apps → Web). ' +
         'Sem isso, o login com Google costuma falhar; o appId do Android não é válido para o SDK web.',
@@ -97,7 +97,7 @@ export function getFirebaseAuth(): Auth {
       const reactNativePersistence = getReactNativePersistence();
       if (!reactNativePersistence) {
         if (__DEV__) {
-          // eslint-disable-next-line no-console
+           
           console.warn(
             '[Firebase] Persistência React Native não disponível neste bundle. ' +
               'O Auth será inicializado com a persistência padrão.',

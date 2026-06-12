@@ -11,7 +11,6 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,6 +18,7 @@ import {
   View,
 } from 'react-native';
 import { Button, SegmentedButtons, Switch, TextInput as PaperTextInput } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getAuthErrorMessage } from '@/lib/firebase-auth-service';
 import { createMedicacao } from '@/lib/idoso-data-service';

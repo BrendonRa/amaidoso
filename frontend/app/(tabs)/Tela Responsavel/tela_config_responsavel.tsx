@@ -1,15 +1,27 @@
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { signOut } from 'firebase/auth';
 import React from 'react';
-import { Animated, Image, Modal, Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { languageOptions, useLanguage, type AppLanguage } from '@/contexts/language-context';
+import { useResponsavelProfile } from '@/contexts/responsavel-profile-context';
 import { getFirebaseAuth } from '@/lib/firebase';
+import { clearLastSessionRole } from '@/lib/session-preferences';
+
+const RESPONSAVEL_NOTIFICATIONS_KEY = '@amaidoso:responsavel-notifications-enabled';
 
 export default function TelaConfigResponsavel() {
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [showLogoutModal, setShowLogoutModal] = React.useState(false);
+  const [showLanguageModal, setShowLanguageModal] = React.useState(false);
   const thumbAnim = React.useRef(new Animated.Value(1)).current;
+  const { profile } = useResponsavelProfile();
+  const { language, setLanguage, t } = useLanguage();
+  const photoUri =
+    profile.photoUri && profile.photoUri !== 'imagem_padrao.png' ? profile.photoUri : null;
 
   React.useEffect(() => {
     Animated.timing(thumbAnim, {
@@ -19,12 +31,29 @@ export default function TelaConfigResponsavel() {
     }).start();
   }, [notificationsEnabled, thumbAnim]);
 
-  const toggleNotifications = () => {
-    setNotificationsEnabled((prev) => !prev);
+  React.useEffect(() => {
+    void AsyncStorage.getItem(RESPONSAVEL_NOTIFICATIONS_KEY)
+      .then((value) => {
+        if (value != null) {
+          setNotificationsEnabled(value === 'true');
+        }
+      })
+      .catch(() => undefined);
+  }, []);
+
+  const toggleNotifications = async () => {
+    const nextEnabled = !notificationsEnabled;
+    setNotificationsEnabled(nextEnabled);
+    await AsyncStorage.setItem(RESPONSAVEL_NOTIFICATIONS_KEY, String(nextEnabled));
   };
 
   const handleLogout = () => {
     setShowLogoutModal(true);
+  };
+
+  const handleSelectLanguage = async (nextLanguage: AppLanguage) => {
+    await setLanguage(nextLanguage);
+    setShowLanguageModal(false);
   };
 
   const handleConfirmLogout = async () => {
@@ -34,32 +63,55 @@ export default function TelaConfigResponsavel() {
     } catch {
       // continua fluxo de saída mesmo se signOut falhar
     }
+    await clearLastSessionRole().catch(() => undefined);
     router.push('../Tela Idoso/tela_inicio1');
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.title}>configurações</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>{t('configuration')}</Text>
+        </View>
+
+        <View style={styles.profileSummary}>
+          {photoUri ? (
+            <Image source={{ uri: photoUri }} style={styles.profileSummaryImage} />
+          ) : (
+            <Ionicons name="person-circle-outline" size={42} color="#5A429B" />
+          )}
+          <View style={styles.profileSummaryText}>
+            <Text style={styles.profileName}>{profile.nome || t('responsible')}</Text>
+            <Text style={styles.profileEmail}>{t('email')}: {profile.email || '-'}</Text>
+          </View>
+        </View>
 
         <View style={styles.list}>
           <TouchableOpacity
             activeOpacity={0.6}
             onPress={() => router.push('./tela_editar_perfil_responsavel')}
             style={styles.itemCard}>
-            <Text style={styles.itemLabel}>Editar Perfil</Text>
+            <Text style={styles.itemLabel}>{t('editProfile')}</Text>
             <Feather name="user" size={20} color="#202020" />
           </TouchableOpacity>
 
-          <TouchableOpacity activeOpacity={0.6} style={styles.itemCard}>
-            <Text style={styles.itemLabel}>Idioma</Text>
-            <Ionicons name="language-outline" size={22} color="#202020" />
+          <TouchableOpacity
+            activeOpacity={0.6}
+            onPress={() => setShowLanguageModal(true)}
+            style={styles.itemCard}>
+            <Text style={styles.itemLabel}>{t('language')}</Text>
+            <View style={styles.itemRight}>
+              <Text style={styles.itemValue}>
+                {languageOptions.find((option) => option.code === language)?.label}
+              </Text>
+              <Ionicons name="language-outline" size={22} color="#202020" />
+            </View>
           </TouchableOpacity>
 
           <View style={styles.itemCard}>
-            <Text style={styles.itemLabel}>Notificações</Text>
+            <Text style={styles.itemLabel}>{t('notifications')}</Text>
             <Pressable
-              onPress={toggleNotifications}
+              onPress={() => void toggleNotifications()}
               style={[styles.toggleButton, notificationsEnabled ? styles.toggleOn : styles.toggleOff]}
             >
               <Animated.View
@@ -80,13 +132,19 @@ export default function TelaConfigResponsavel() {
             </Pressable>
           </View>
 
-          <TouchableOpacity activeOpacity={0.6} style={styles.itemCard}>
-            <Text style={styles.itemLabel}>Ajuda</Text>
+          <TouchableOpacity
+            activeOpacity={0.6}
+            onPress={() => router.push('./tela_ajuda_responsavel')}
+            style={styles.itemCard}>
+            <Text style={styles.itemLabel}>{t('help')}</Text>
             <Feather name="help-circle" size={21} color="#202020" />
           </TouchableOpacity>
 
-          <TouchableOpacity activeOpacity={0.6} style={styles.itemCard}>
-            <Text style={styles.itemLabel}>Sobre</Text>
+          <TouchableOpacity
+            activeOpacity={0.6}
+            onPress={() => router.push('./tela_sobre_responsavel')}
+            style={styles.itemCard}>
+            <Text style={styles.itemLabel}>{t('about')}</Text>
             <MaterialCommunityIcons name="dots-horizontal" size={22} color="#202020" />
           </TouchableOpacity>
 
@@ -94,7 +152,7 @@ export default function TelaConfigResponsavel() {
             activeOpacity={0.6}
             onPress={handleLogout}
             style={styles.logoutButton}>
-            <Text style={styles.logoutText}>Sair</Text>
+            <Text style={styles.logoutText}>{t('logout')}</Text>
             <Feather name="log-out" size={22} color="#202020" />
           </TouchableOpacity>
         </View>
@@ -105,7 +163,7 @@ export default function TelaConfigResponsavel() {
             onPress={() => router.push('./tela_painel_responsavel')}
             style={styles.navItem}>
             <Feather name="edit-3" size={24} color="#121212" />
-            <Text style={styles.navLabel}>Painel</Text>
+            <Text style={styles.navLabel}>{t('panel')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -113,17 +171,57 @@ export default function TelaConfigResponsavel() {
             onPress={() => router.push('./tela_home_responsavel')}
             style={styles.navItem}>
             <Image source={require('../../../assets/images/home.png')} style={styles.navIcon} />
-            <Text style={styles.navLabel}>Home</Text>
+            <Text style={styles.navLabel}>{t('home')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity activeOpacity={0.6} style={styles.navItem}>
             <View style={styles.activePill}>
               <Feather name="settings" size={24} color="#121212" />
             </View>
-            <Text style={styles.navLabel}>Configurações</Text>
+            <Text style={styles.navLabel}>{t('configuration')}</Text>
           </TouchableOpacity>
         </View>
       </View>
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={showLanguageModal}
+        onRequestClose={() => setShowLanguageModal(false)}>
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowLanguageModal(false)} />
+          <View style={styles.modalCard}>
+            <View style={styles.languageIconWrap}>
+              <Ionicons name="language-outline" size={26} color="#0C4DFF" />
+            </View>
+            <Text style={styles.modalTitle}>{t('languageTitle')}</Text>
+            <Text style={styles.modalText}>{t('languageDescription')}</Text>
+
+            <View style={styles.languageOptions}>
+              {languageOptions.map((option) => {
+                const selected = option.code === language;
+
+                return (
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    key={option.code}
+                    onPress={() => void handleSelectLanguage(option.code)}
+                    style={[styles.languageOption, selected ? styles.languageOptionSelected : null]}>
+                    <Text
+                      style={[
+                        styles.languageOptionText,
+                        selected ? styles.languageOptionTextSelected : null,
+                      ]}>
+                      {option.label}
+                    </Text>
+                    {selected ? <Feather name="check" size={20} color="#0C4DFF" /> : null}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         animationType="fade"
@@ -136,22 +234,22 @@ export default function TelaConfigResponsavel() {
             <View style={styles.modalIconWrap}>
               <Feather name="log-out" size={24} color="#A43232" />
             </View>
-            <Text style={styles.modalTitle}>Deseja sair da conta?</Text>
-            <Text style={styles.modalText}>Voce voltara ao inicio.</Text>
+            <Text style={styles.modalTitle}>{t('logoutQuestion')}</Text>
+            <Text style={styles.modalText}>{t('logoutText')}</Text>
 
             <View style={styles.modalActions}>
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => setShowLogoutModal(false)}
                 style={styles.modalSecondaryButton}>
-                <Text style={styles.modalSecondaryText}>Cancelar</Text>
+                <Text style={styles.modalSecondaryText}>{t('cancel')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={handleConfirmLogout}
                 style={styles.modalPrimaryButton}>
-                <Text style={styles.modalPrimaryText}>Sair</Text>
+                <Text style={styles.modalPrimaryText}>{t('logout')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -169,18 +267,50 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    paddingTop: 26,
+  },
+  header: {
+    paddingTop: 14,
+    paddingHorizontal: 18,
+    paddingBottom: 18,
+    alignItems: 'flex-start',
   },
   title: {
-    fontSize: 31,
+    fontSize: 24,
     fontWeight: '800',
-    color: '#101010',
-    textAlign: 'center',
-    marginBottom: 36,
+    color: '#202020',
   },
   list: {
     flex: 1,
     paddingHorizontal: 14,
+  },
+  profileSummary: {
+    marginHorizontal: 14,
+    marginBottom: 18,
+    borderRadius: 16,
+    backgroundColor: '#EEF4FF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: 12,
+  },
+  profileSummaryImage: {
+    width: 42,
+    height: 42,
+    borderRadius: 999,
+    backgroundColor: '#E9D9FF',
+  },
+  profileSummaryText: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#1D1D1D',
+  },
+  profileEmail: {
+    marginTop: 2,
+    fontSize: 13,
+    color: '#5C5C5C',
   },
   itemCard: {
     minHeight: 44,
@@ -200,6 +330,15 @@ const styles = StyleSheet.create({
   itemLabel: {
     fontSize: 15,
     color: '#1C1C1C',
+  },
+  itemRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  itemValue: {
+    fontSize: 13,
+    color: '#5C5C5C',
   },
   logoutButton: {
     minHeight: 44,
@@ -288,6 +427,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 14,
   },
+  languageIconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 999,
+    backgroundColor: '#E7EFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
   modalTitle: {
     fontSize: 20,
     fontWeight: '800',
@@ -306,6 +454,33 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     gap: 10,
+  },
+  languageOptions: {
+    width: '100%',
+    gap: 10,
+  },
+  languageOption: {
+    minHeight: 48,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#D8D8D8',
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+  },
+  languageOptionSelected: {
+    borderColor: '#0C4DFF',
+    backgroundColor: '#EEF4FF',
+  },
+  languageOptionText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#333333',
+  },
+  languageOptionTextSelected: {
+    color: '#0C4DFF',
   },
   modalSecondaryButton: {
     flex: 1,

@@ -35,6 +35,11 @@ const ResponsavelProfileContext = React.createContext<ResponsavelProfileContextV
   undefined,
 );
 
+function normalizePhotoUri(value: unknown, fallback?: string | null) {
+  const photoUri = value != null ? String(value) : fallback;
+  return photoUri && photoUri !== 'imagem_padrao.png' ? photoUri : null;
+}
+
 export function ResponsavelProfileProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = React.useState<ResponsavelProfile>(initialProfile);
 
@@ -67,9 +72,10 @@ export function ResponsavelProfileProvider({ children }: { children: React.React
           setProfile((current) => ({
             ...current,
             nome,
-            usuario: nome,
+            usuario: String(data.usuario ?? nome),
+            nascimento: String(data.nascimento ?? ''),
             email,
-            photoUri: data.fotoPerfil != null ? String(data.fotoPerfil) : user.photoURL,
+            photoUri: normalizePhotoUri(data.fotoPerfil, user.photoURL),
             authProvider,
           }));
         })

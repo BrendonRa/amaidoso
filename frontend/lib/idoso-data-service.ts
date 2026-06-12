@@ -30,6 +30,7 @@ export type IdosoResumo = {
   fotoPerfil: string | null;
   responsavelId: string;
   expoPushToken?: string;
+  notificationsEnabled?: boolean;
 };
 
 export type Lembrete = {
@@ -90,6 +91,7 @@ function mapIdosoDoc(docSnap: { id: string; data: () => Record<string, unknown> 
     fotoPerfil: d.fotoPerfil != null ? String(d.fotoPerfil) : null,
     responsavelId: String(d.responsavelId ?? ''),
     expoPushToken: d.expoPushToken ? String(d.expoPushToken) : '',
+    notificationsEnabled: d.notificationsEnabled !== false,
   };
 }
 
@@ -197,6 +199,11 @@ function getExpoProjectId() {
 export async function registerCurrentIdosoNotificationToken(idosoUid: string): Promise<void> {
   if (Platform.OS === 'web') return;
 
+  const idosoSnap = await getDoc(idosoDoc(idosoUid));
+  if (idosoSnap.exists() && idosoSnap.data().notificationsEnabled === false) {
+    return;
+  }
+
   const currentPermission = await Notifications.getPermissionsAsync();
   let finalStatus = currentPermission.status;
 
@@ -216,10 +223,76 @@ export async function registerCurrentIdosoNotificationToken(idosoUid: string): P
     idosoDoc(idosoUid),
     {
       expoPushToken: tokenResponse.data,
+      notificationsEnabled: true,
       pushTokenUpdatedAt: serverTimestamp(),
     },
     { merge: true },
   );
+}
+
+export async function getIdosoNotificationsEnabled(idosoUid: string): Promise<boolean> {
+  const snap = await getDoc(idosoDoc(idosoUid));
+  return snap.exists() ? snap.data().notificationsEnabled !== false : true;
+}
+
+export async function setIdosoNotificationsEnabled(
+  idosoUid: string,
+  enabled: boolean,
+): Promise<boolean> {
+  if (!enabled) {
+    await setDoc(
+      idosoDoc(idosoUid),
+      {
+        expoPushToken: '',
+        notificationsEnabled: false,
+        pushTokenUpdatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
+    return false;
+  }
+
+  if (Platform.OS === 'web') {
+    await setDoc(
+      idosoDoc(idosoUid),
+      {
+        notificationsEnabled: true,
+        pushTokenUpdatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
+    return true;
+  }
+
+  const currentPermission = await Notifications.getPermissionsAsync();
+  let finalStatus = currentPermission.status;
+
+  if (finalStatus !== 'granted') {
+    const requestedPermission = await Notifications.requestPermissionsAsync();
+    finalStatus = requestedPermission.status;
+  }
+
+  if (finalStatus !== 'granted') {
+    await setDoc(idosoDoc(idosoUid), { notificationsEnabled: false }, { merge: true });
+    return false;
+  }
+
+  const projectId = getExpoProjectId();
+  const tokenResponse = await Notifications.getExpoPushTokenAsync(
+    projectId ? { projectId } : undefined,
+  );
+
+  await setDoc(
+    idosoDoc(idosoUid),
+    {
+      expoPushToken: tokenResponse.data,
+      notificationsEnabled: true,
+      pushTokenUpdatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
+
+  return true;
 }
 
 async function sendMedicationPushNotification(idosoUid: string, title: string, body: string) {

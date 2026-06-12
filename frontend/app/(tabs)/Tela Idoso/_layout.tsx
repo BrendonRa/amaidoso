@@ -25,6 +25,8 @@ export default function TabLayout() {
       <Stack.Screen name="tutorial_final" />
       <Stack.Screen name="tela_tutorial_idoso" />
       <Stack.Screen name="tela_configuracao_idoso" />
+      <Stack.Screen name="tela_ajuda_idoso" />
+      <Stack.Screen name="tela_sobre_idoso" />
     </Stack>
   );
 }

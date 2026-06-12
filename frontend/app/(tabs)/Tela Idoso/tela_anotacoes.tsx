@@ -5,20 +5,22 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView, SafeAreaView as SafeAreaInsetsView } from 'react-native-safe-area-context';
 
 import { useIdosoProfile } from '@/contexts/idoso-profile-context';
+import { useLanguage } from '@/contexts/language-context';
 import { createAnotacao, subscribeAnotacoes, type Anotacao } from '@/lib/idoso-data-service';
 import IdosoBottomNav from './IdosoBottomNav';
 
 export default function TelaAnotacoesIdoso() {
   const { profile } = useIdosoProfile();
+  const { t } = useLanguage();
   const [anotacoes, setAnotacoes] = React.useState<Anotacao[] | null>(null);
   const [texto, setTexto] = React.useState('');
   const [saving, setSaving] = React.useState(false);
@@ -34,7 +36,7 @@ export default function TelaAnotacoesIdoso() {
 
   const handleSave = async () => {
     if (!profile?.uid || !texto.trim()) {
-      Alert.alert('Anotação', 'Escreva algo primeiro.');
+      Alert.alert(t('Anotação'), t('Escreva algo primeiro.'));
       return;
     }
     try {
@@ -42,48 +44,52 @@ export default function TelaAnotacoesIdoso() {
       await createAnotacao(profile.uid, texto);
       setTexto('');
     } catch {
-      Alert.alert('Erro', 'Tente de novo.');
+      Alert.alert(t('Erro'), t('Tente de novo.'));
     } finally {
       setSaving(false);
     }
   };
 
-  const firstName = profile?.nome?.split(' ')[0] || 'Idoso';
+  const firstName = profile?.nome?.split(' ')[0] || t('senior');
   const photoUri =
     profile?.fotoPerfil && profile.fotoPerfil !== 'imagem_padrao.png' ? profile.fotoPerfil : null;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.greeting}>Olá, {firstName}</Text>
-        <View style={styles.avatar}>
-          {photoUri ? (
-            <Image source={{ uri: photoUri }} style={styles.avatarImage} />
-          ) : (
-            <Ionicons name="person" size={22} color="#F58220" />
-          )}
+    <SafeAreaView edges={['left', 'right']} style={styles.container}>
+      <SafeAreaInsetsView edges={['top']} style={styles.headerSafeArea}>
+        <View style={styles.header}>
+          <Text style={styles.greeting}>{t('Olá')}, {firstName}</Text>
+          <View style={styles.avatar}>
+            {photoUri ? (
+              <Image source={{ uri: photoUri }} style={styles.avatarImage} />
+            ) : (
+              <Ionicons name="person" size={22} color="#F58220" />
+            )}
+          </View>
         </View>
-      </View>
+      </SafeAreaInsetsView>
 
       <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('./tela_principal_idoso')} style={styles.backButton}>
-        <Text style={styles.backButtonText}>Voltar</Text>
+        <Text style={styles.backButtonText}>{t('Voltar')}</Text>
       </TouchableOpacity>
 
       <View style={styles.content}>
-        <Text style={styles.sectionTitle}>Nova anotação</Text>
+        <Text style={styles.sectionTitle}>{t('Nova anotação')}</Text>
         <TextInput
           multiline
-          placeholder="Escreva aqui..."
+          placeholder={t('Escreva aqui...')}
           placeholderTextColor="#777777"
           style={styles.textArea}
           value={texto}
           onChangeText={setTexto}
         />
         <TouchableOpacity disabled={saving} onPress={() => void handleSave()} style={styles.saveButton}>
-          <Text style={styles.saveButtonText}>{saving ? 'Salvando...' : 'Salvar anotação'}</Text>
+          <Text style={styles.saveButtonText}>
+            {saving ? t('Salvando...') : t('Salvar anotação')}
+          </Text>
         </TouchableOpacity>
 
-        <Text style={styles.sectionTitle}>Minhas anotações</Text>
+        <Text style={styles.sectionTitle}>{t('Minhas anotações')}</Text>
         {anotacoes === null ? (
           <ActivityIndicator size="large" color="#F58220" />
         ) : anotacoes.length ? (
@@ -94,7 +100,7 @@ export default function TelaAnotacoesIdoso() {
             </View>
           ))
         ) : (
-          <Text style={styles.emptyText}>Nenhuma anotação ainda.</Text>
+          <Text style={styles.emptyText}>{t('Nenhuma anotação ainda.')}</Text>
         )}
       </View>
 
@@ -108,10 +114,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F2F2F2',
   },
+  headerSafeArea: {
+    backgroundColor: '#F58220',
+  },
   header: {
     backgroundColor: '#F58220',
     padding: 16,
-    paddingTop: 52,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

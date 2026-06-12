@@ -10,19 +10,21 @@ import {
   Modal,
   Platform,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView, SafeAreaView as SafeAreaInsetsView } from 'react-native-safe-area-context';
 
 import {
   BirthDateInput,
   displayDateToStorage,
   storageDateToDisplay,
 } from '@/components/birth-date-input';
+import { PasswordInput, PasswordVisibilityToggle } from '@/components/password-input';
+import { useLanguage } from '@/contexts/language-context';
 import { useResponsavelProfile } from '@/contexts/responsavel-profile-context';
 import {
   createIdosoForResponsavel,
@@ -50,6 +52,7 @@ function formatCpfDisplay(digits: string) {
 
 export default function TelaPainelResponsavel() {
   const { profile } = useResponsavelProfile();
+  const { t } = useLanguage();
   const [idosos, setIdosos] = React.useState<IdosoItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [modalVisible, setModalVisible] = React.useState(false);
@@ -59,6 +62,7 @@ export default function TelaPainelResponsavel() {
   const [dataNasc, setDataNasc] = React.useState('');
   const [senhaIdoso, setSenhaIdoso] = React.useState('');
   const [confirmSenhaIdoso, setConfirmSenhaIdoso] = React.useState('');
+  const [showSenhaIdoso, setShowSenhaIdoso] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
 
   React.useEffect(() => {
@@ -69,12 +73,12 @@ export default function TelaPainelResponsavel() {
         setLoading(false);
       },
       (e) => {
-        Alert.alert('Erro', getAuthErrorMessage(e, 'email'));
+        Alert.alert(t('Erro'), t(getAuthErrorMessage(e, 'email')));
         setIdosos([]);
         setLoading(false);
       },
     );
-  }, []);
+  }, [t]);
 
   const openCreateModal = () => {
     setEditing(null);
@@ -83,6 +87,7 @@ export default function TelaPainelResponsavel() {
     setDataNasc('');
     setSenhaIdoso('');
     setConfirmSenhaIdoso('');
+    setShowSenhaIdoso(false);
     setModalVisible(true);
   };
 
@@ -93,6 +98,7 @@ export default function TelaPainelResponsavel() {
     setDataNasc(storageDateToDisplay(idoso.dataNascimento));
     setSenhaIdoso('');
     setConfirmSenhaIdoso('');
+    setShowSenhaIdoso(false);
     setModalVisible(true);
   };
 
@@ -108,19 +114,19 @@ export default function TelaPainelResponsavel() {
     const storageDate = displayDateToStorage(dataNasc.trim());
 
     if (!nome || cpfDigits.length !== 11 || !dataNasc.trim()) {
-      Alert.alert('Campos obrigatórios', 'Preencha todos os campos.');
+      Alert.alert(t('Campos obrigatórios'), t('Preencha todos os campos.'));
       return;
     }
     if (!storageDate) {
-      Alert.alert('Data', 'Digite uma data valida.');
+      Alert.alert(t('Data'), t('Digite uma data valida.'));
       return;
     }
     if (!editing && senhaIdoso.length < 6) {
-      Alert.alert('Senha', 'Use pelo menos 6 caracteres.');
+      Alert.alert(t('Senha'), t('Use pelo menos 6 caracteres.'));
       return;
     }
     if (!editing && senhaIdoso !== confirmSenhaIdoso) {
-      Alert.alert('Senha', 'As senhas nao sao iguais.');
+      Alert.alert(t('Senha'), t('As senhas nao sao iguais.'));
       return;
     }
 
@@ -142,9 +148,9 @@ export default function TelaPainelResponsavel() {
         });
       }
       setModalVisible(false);
-      Alert.alert('Tudo certo', editing ? 'Perfil atualizado.' : 'Idoso cadastrado.');
+      Alert.alert(t('Tudo certo'), editing ? t('Perfil atualizado.') : t('Idoso cadastrado.'));
     } catch (e) {
-      Alert.alert('Erro', getAuthErrorMessage(e, 'email'));
+      Alert.alert(t('Erro'), t(getAuthErrorMessage(e, 'email')));
     } finally {
       setSaving(false);
     }
@@ -160,34 +166,36 @@ export default function TelaPainelResponsavel() {
         )}
       </View>
       <View style={styles.idosoInfo}>
-        <Text style={styles.idosoName}>{item.nomeIdoso || 'Sem nome'}</Text>
+        <Text style={styles.idosoName}>{item.nomeIdoso || t('Sem nome')}</Text>
         <Text style={styles.idosoMeta}>CPF: {formatCpfDisplay(item.cpf)}</Text>
-        <Text style={styles.idosoMeta}>Nascimento: {storageDateToDisplay(item.dataNascimento) || '-'}</Text>
+        <Text style={styles.idosoMeta}>{t('Nascimento')}: {storageDateToDisplay(item.dataNascimento) || '-'}</Text>
       </View>
       <Feather name="edit-2" size={20} color="#1456FF" />
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView edges={['left', 'right']} style={styles.safeArea}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.greeting}>Olá, {profile.nome.split(' ')[0] || 'Fulano'}</Text>
+        <SafeAreaInsetsView edges={['top']} style={styles.headerSafeArea}>
+          <View style={styles.header}>
+            <Text style={styles.greeting}>{t('Olá')}, {profile.nome.split(' ')[0] || 'Fulano'}</Text>
 
-          <TouchableOpacity
-            activeOpacity={0.6}
-            onPress={() => router.push('./tela_editar_perfil_responsavel')}
-            style={styles.avatar}>
-            {profile.photoUri ? (
-              <Image source={{ uri: profile.photoUri }} style={styles.avatarImage} />
-            ) : (
-              <Ionicons name="person" size={18} color="#1F1F1F" />
-            )}
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              activeOpacity={0.6}
+              onPress={() => router.push('./tela_editar_perfil_responsavel')}
+              style={styles.avatar}>
+              {profile.photoUri ? (
+                <Image source={{ uri: profile.photoUri }} style={styles.avatarImage} />
+              ) : (
+                <Ionicons name="person" size={18} color="#1F1F1F" />
+              )}
+            </TouchableOpacity>
+          </View>
+        </SafeAreaInsetsView>
 
         <View style={styles.topActions}>
-          <Text style={styles.sectionTitle}>Idosos cadastrados</Text>
+          <Text style={styles.sectionTitle}>{t('Idosos cadastrados')}</Text>
           <TouchableOpacity activeOpacity={0.75} onPress={openCreateModal} style={styles.addPersonButton}>
             <Ionicons name="person-add-outline" size={24} color="#1A1A1A" />
           </TouchableOpacity>
@@ -198,9 +206,9 @@ export default function TelaPainelResponsavel() {
             <ActivityIndicator size="large" color="#1456FF" />
           ) : idosos.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>Nenhum Idoso cadastrado!</Text>
+              <Text style={styles.emptyText}>{t('Nenhum Idoso cadastrado!')}</Text>
               <TouchableOpacity activeOpacity={0.75} onPress={openCreateModal} style={styles.emptyButton}>
-                <Text style={styles.emptyButtonText}>Cadastrar idoso</Text>
+                <Text style={styles.emptyButtonText}>{t('Cadastrar idoso')}</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -218,7 +226,7 @@ export default function TelaPainelResponsavel() {
             <View style={styles.activePill}>
               <Feather name="edit-3" size={24} color="#121212" />
             </View>
-            <Text style={styles.navLabel}>Painel</Text>
+            <Text style={styles.navLabel}>{t('panel')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -226,7 +234,7 @@ export default function TelaPainelResponsavel() {
             onPress={() => router.push('./tela_home_responsavel')}
             style={styles.navItem}>
             <Image source={require('../../../assets/images/home.png')} style={styles.navIcon} />
-            <Text style={styles.navLabel}>Home</Text>
+            <Text style={styles.navLabel}>{t('home')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -234,7 +242,7 @@ export default function TelaPainelResponsavel() {
             onPress={() => router.push('./tela_config_responsavel')}
             style={styles.navItem}>
             <Feather name="settings" size={24} color="#121212" />
-            <Text style={styles.navLabel}>Configurações</Text>
+            <Text style={styles.navLabel}>{t('configuration')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -245,14 +253,14 @@ export default function TelaPainelResponsavel() {
           style={styles.modalOverlay}>
           <Pressable style={styles.modalBackdrop} onPress={closeModal} />
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>{editing ? 'Editar idoso' : 'Cadastrar idoso'}</Text>
+            <Text style={styles.modalTitle}>{editing ? t('Editar idoso') : t('Cadastrar idoso')}</Text>
             <Text style={styles.modalHint}>
               {editing
-                ? 'CPF e senha definem o login e não são alterados por aqui.'
-                : 'O idoso vai entrar no app usando este CPF e senha.'}
+                ? t('CPF e senha definem o login e não são alterados por aqui.')
+                : t('O idoso vai entrar no app usando este CPF e senha.')}
             </Text>
             <TextInput
-              placeholder="Nome completo"
+              placeholder={t('Nome completo')}
               placeholderTextColor="#737373"
               style={styles.modalInput}
               value={nomeIdoso}
@@ -271,38 +279,47 @@ export default function TelaPainelResponsavel() {
             <BirthDateInput
               containerStyle={styles.modalDateInput}
               onChangeText={setDataNasc}
-              placeholder="Data de nascimento"
+              placeholder={t('Data de nascimento')}
               value={dataNasc}
             />
             {!editing ? (
               <>
-                <TextInput
-                  placeholder="Senha (mín. 6 caracteres)"
-                  placeholderTextColor="#737373"
-                  secureTextEntry
-                  style={styles.modalInput}
+                <PasswordInput
+                  placeholder={t('Senha (mín. 6 caracteres)')}
+                  containerStyle={styles.modalPasswordField}
+                  fieldStyle={styles.modalInput}
+                  inputStyle={styles.passwordInputText}
+                  showToggle={false}
+                  visible={showSenhaIdoso}
                   value={senhaIdoso}
                   onChangeText={setSenhaIdoso}
                 />
-                <TextInput
-                  placeholder="Confirmar senha"
-                  placeholderTextColor="#737373"
-                  secureTextEntry
-                  style={styles.modalInput}
+                <PasswordInput
+                  placeholder={t('Confirmar senha')}
+                  containerStyle={styles.confirmModalPasswordField}
+                  fieldStyle={styles.modalInput}
+                  inputStyle={styles.passwordInputText}
+                  showToggle={false}
+                  visible={showSenhaIdoso}
                   value={confirmSenhaIdoso}
                   onChangeText={setConfirmSenhaIdoso}
+                />
+                <PasswordVisibilityToggle
+                  visible={showSenhaIdoso}
+                  onPress={() => setShowSenhaIdoso((current) => !current)}
+                  style={styles.modalPasswordToggle}
                 />
               </>
             ) : null}
             <View style={styles.modalActions}>
               <TouchableOpacity disabled={saving} onPress={closeModal} style={styles.modalBtnSecondary}>
-                <Text style={styles.modalBtnSecondaryText}>Cancelar</Text>
+                <Text style={styles.modalBtnSecondaryText}>{t('Cancelar')}</Text>
               </TouchableOpacity>
               <TouchableOpacity disabled={saving} onPress={() => void handleSave()} style={styles.modalBtnPrimary}>
                 {saving ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
-                  <Text style={styles.modalBtnPrimaryText}>Salvar</Text>
+                  <Text style={styles.modalBtnPrimaryText}>{t('Salvar')}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -323,9 +340,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
+  headerSafeArea: {
+    backgroundColor: '#1456FF',
+  },
   header: {
     height: 84,
-    backgroundColor: '#1456FF',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -514,7 +533,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     marginBottom: 12,
   },
+  passwordInputText: {
+    fontSize: 15,
+    color: '#151515',
+  },
   modalDateInput: {
+    marginBottom: 12,
+  },
+  modalPasswordField: {
+    marginBottom: 12,
+  },
+  confirmModalPasswordField: {
+    marginBottom: 0,
+  },
+  modalPasswordToggle: {
     marginBottom: 12,
   },
   inputDisabled: {

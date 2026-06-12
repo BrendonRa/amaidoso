@@ -1,14 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, SafeAreaView as SafeAreaInsetsView } from 'react-native-safe-area-context';
 
 import { useIdosoProfile } from '@/contexts/idoso-profile-context';
+import { useLanguage } from '@/contexts/language-context';
 import { subscribeLembretes, type Lembrete } from '@/lib/idoso-data-service';
 import IdosoBottomNav from './IdosoBottomNav';
 
 export default function LembretesScreen() {
   const { profile } = useIdosoProfile();
+  const { t } = useLanguage();
   const [lembretes, setLembretes] = React.useState<Lembrete[] | null>(null);
 
   React.useEffect(() => {
@@ -20,25 +23,27 @@ export default function LembretesScreen() {
     return subscribeLembretes(profile.uid, setLembretes, () => setLembretes([]));
   }, [profile?.uid]);
 
-  const firstName = profile?.nome?.split(' ')[0] || 'Idoso';
+  const firstName = profile?.nome?.split(' ')[0] || t('senior');
   const photoUri =
     profile?.fotoPerfil && profile.fotoPerfil !== 'imagem_padrao.png' ? profile.fotoPerfil : null;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.greeting}>Olá, {firstName}</Text>
-        <View style={styles.avatar}>
-          {photoUri ? (
-            <Image source={{ uri: photoUri }} style={styles.avatarImage} />
-          ) : (
-            <Ionicons name="person" size={22} color="#F58220" />
-          )}
+    <SafeAreaView edges={['left', 'right']} style={styles.container}>
+      <SafeAreaInsetsView edges={['top']} style={styles.headerSafeArea}>
+        <View style={styles.header}>
+          <Text style={styles.greeting}>{t('Olá')}, {firstName}</Text>
+          <View style={styles.avatar}>
+            {photoUri ? (
+              <Image source={{ uri: photoUri }} style={styles.avatarImage} />
+            ) : (
+              <Ionicons name="person" size={22} color="#F58220" />
+            )}
+          </View>
         </View>
-      </View>
+      </SafeAreaInsetsView>
 
       <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('./tela_principal_idoso')} style={styles.backButton}>
-        <Text style={styles.backButtonText}>Voltar</Text>
+        <Text style={styles.backButtonText}>{t('Voltar')}</Text>
       </TouchableOpacity>
 
       <View style={styles.content}>
@@ -55,12 +60,12 @@ export default function LembretesScreen() {
             </View>
           ))
         ) : (
-          <Text style={styles.emptyText}>Nenhum lembrete por enquanto.</Text>
+          <Text style={styles.emptyText}>{t('Nenhum lembrete por enquanto.')}</Text>
         )}
       </View>
 
       <View style={styles.warningBox}>
-        <Text style={styles.warningText}>Os lembretes são criados pelo seu responsável.</Text>
+        <Text style={styles.warningText}>{t('Os lembretes são criados pelo seu responsável.')}</Text>
       </View>
       <IdosoBottomNav activeTab="home" />
     </SafeAreaView>
@@ -71,6 +76,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F2F2F2',
+  },
+  headerSafeArea: {
+    backgroundColor: '#F58220',
   },
   backButton: {
     alignSelf: 'flex-start',
@@ -89,7 +97,6 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#F58220',
     padding: 16,
-    paddingTop: 52,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

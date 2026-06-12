@@ -7,14 +7,15 @@ import {
   FlatList,
   Image,
   RefreshControl,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView, SafeAreaView as SafeAreaInsetsView } from 'react-native-safe-area-context';
 
 import { useIdosoProfile } from '@/contexts/idoso-profile-context';
+import { useLanguage } from '@/contexts/language-context';
 import {
   confirmMedicacao,
   listMedicacoes,
@@ -27,6 +28,7 @@ import IdosoBottomNav from './IdosoBottomNav';
 
 export default function ConfirmarMedicacoesScreen() {
   const { profile } = useIdosoProfile();
+  const { t } = useLanguage();
   const [medicacoes, setMedicacoes] = React.useState<Medicacao[] | null>(null);
   const [savingId, setSavingId] = React.useState<string | null>(null);
   const [refreshing, setRefreshing] = React.useState(false);
@@ -58,11 +60,11 @@ export default function ConfirmarMedicacoesScreen() {
       setRefreshing(true);
       await load();
     } catch {
-      Alert.alert('Erro', 'Tente de novo.');
+      Alert.alert(t('Erro'), t('Tente de novo.'));
     } finally {
       setRefreshing(false);
     }
-  }, [load]);
+  }, [load, t]);
 
   React.useEffect(() => {
     if (!profile?.uid) return;
@@ -75,12 +77,12 @@ export default function ConfirmarMedicacoesScreen() {
 
     novasMedicacoes.forEach((item) => notifiedIds.current.add(item.id));
     Alert.alert(
-      'Novo remedio',
+      t('Novo remedio'),
       novasMedicacoes.length === 1
-        ? `${novasMedicacoes[0].nome} adicionado.`
-        : `${novasMedicacoes.length} remedios adicionados.`,
+        ? `${novasMedicacoes[0].nome} ${t('adicionado.')}`
+        : `${novasMedicacoes.length} ${t('remedios adicionados.')}`,
     );
-  }, [medicacoes]);
+  }, [medicacoes, t]);
 
   const handleConfirm = async (item: Medicacao, confirmado: boolean) => {
     if (!profile?.uid) return;
@@ -88,7 +90,7 @@ export default function ConfirmarMedicacoesScreen() {
       setSavingId(item.id);
       await confirmMedicacao(profile.uid, item.id, confirmado);
     } catch {
-      Alert.alert('Erro', 'Tente de novo.');
+      Alert.alert(t('Erro'), t('Tente de novo.'));
     } finally {
       setSavingId(null);
     }
@@ -100,13 +102,13 @@ export default function ConfirmarMedicacoesScreen() {
       setSavingId(item.id);
       await markMedicacaoSeen(profile.uid, item.id);
     } catch {
-      Alert.alert('Erro', 'Tente de novo.');
+      Alert.alert(t('Erro'), t('Tente de novo.'));
     } finally {
       setSavingId(null);
     }
   };
 
-  const firstName = profile?.nome?.split(' ')[0] || 'Idoso';
+  const firstName = profile?.nome?.split(' ')[0] || t('senior');
   const photoUri =
     profile?.fotoPerfil && profile.fotoPerfil !== 'imagem_padrao.png' ? profile.fotoPerfil : null;
 
@@ -117,7 +119,7 @@ export default function ConfirmarMedicacoesScreen() {
           <Text style={styles.cardText}>{item.nome}</Text>
           {item.novo ? (
             <View style={styles.newBadge}>
-              <Text style={styles.newBadgeText}>Novo</Text>
+              <Text style={styles.newBadgeText}>{t('Novo')}</Text>
             </View>
           ) : null}
         </View>
@@ -128,14 +130,14 @@ export default function ConfirmarMedicacoesScreen() {
             onPress={() => void handleConfirm(item, true)}
             style={[styles.confirmButton, item.confirmado && styles.confirmButtonActive]}>
             <Text style={[styles.confirmButtonText, item.confirmado && styles.confirmButtonTextActive]}>
-              Tomei
+              {t('Tomei')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             disabled={savingId === item.id}
             onPress={() => void handleConfirm(item, false)}
             style={styles.undoButton}>
-            <Text style={styles.undoButtonText}>Ainda não</Text>
+            <Text style={styles.undoButtonText}>{t('Ainda não')}</Text>
           </TouchableOpacity>
         </View>
         {item.novo ? (
@@ -143,7 +145,7 @@ export default function ConfirmarMedicacoesScreen() {
             disabled={savingId === item.id}
             onPress={() => void handleMarkSeen(item)}
             style={styles.seenButton}>
-            <Text style={styles.seenButtonText}>Marcar como visto</Text>
+            <Text style={styles.seenButtonText}>{t('Marcar como visto')}</Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -151,27 +153,29 @@ export default function ConfirmarMedicacoesScreen() {
       <View style={styles.timeWrap}>
         <Text style={styles.time}>{item.horario}</Text>
         <Text style={[styles.status, item.confirmado && styles.statusOk]}>
-          {item.confirmado ? 'Confirmada' : 'Pendente'}
+          {item.confirmado ? t('Confirmada') : t('Pendente')}
         </Text>
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.greeting}>Olá, {firstName}</Text>
-        <View style={styles.avatar}>
-          {photoUri ? (
-            <Image source={{ uri: photoUri }} style={styles.avatarImage} />
-          ) : (
-            <Ionicons name="person" size={22} color="#F58220" />
-          )}
+    <SafeAreaView edges={['left', 'right']} style={styles.container}>
+      <SafeAreaInsetsView edges={['top']} style={styles.headerSafeArea}>
+        <View style={styles.header}>
+          <Text style={styles.greeting}>{t('Olá')}, {firstName}</Text>
+          <View style={styles.avatar}>
+            {photoUri ? (
+              <Image source={{ uri: photoUri }} style={styles.avatarImage} />
+            ) : (
+              <Ionicons name="person" size={22} color="#F58220" />
+            )}
+          </View>
         </View>
-      </View>
+      </SafeAreaInsetsView>
 
       <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('./tela_principal_idoso')} style={styles.backButton}>
-        <Text style={styles.backButtonText}>Voltar</Text>
+        <Text style={styles.backButtonText}>{t('Voltar')}</Text>
       </TouchableOpacity>
 
       {medicacoes === null ? (
@@ -196,13 +200,15 @@ export default function ConfirmarMedicacoesScreen() {
             />
           }
           ListEmptyComponent={
-            <Text style={styles.emptyText}>Nenhuma medicação cadastrada.</Text>
+            <Text style={styles.emptyText}>{t('Nenhuma medicação cadastrada.')}</Text>
           }
         />
       )}
 
       <View style={styles.warningBox}>
-        <Text style={styles.warningText}>As medicações são cadastradas pelo responsável. Confirme quando tomar.</Text>
+        <Text style={styles.warningText}>
+          {t('As medicações são cadastradas pelo responsável. Confirme quando tomar.')}
+        </Text>
       </View>
       <IdosoBottomNav activeTab="home" />
     </SafeAreaView>
@@ -213,6 +219,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F2F2F2',
+  },
+  headerSafeArea: {
+    backgroundColor: '#F58220',
   },
   backButton: {
     alignSelf: 'flex-start',
@@ -231,7 +240,6 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#F58220',
     padding: 16,
-    paddingTop: 52,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

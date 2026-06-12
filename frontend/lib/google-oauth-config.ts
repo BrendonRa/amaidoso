@@ -7,23 +7,33 @@ import googleServices from '../google-services.json';
 type OauthClient = { client_id: string; client_type: number };
 
 type GoogleServicesWithOauth = {
-  client: Array<{
+  client: {
     oauth_client?: OauthClient[];
-  }>;
+  }[];
 };
 
-/**
- * Client ID OAuth tipo "Web" do `google-services.json` (Firebase costuma colocar client_type 3).
- * Para o fluxo nativo (expo-auth-session), o mesmo ID costuma servir como fallback em `clientId`
- * quando não há client iOS/Android dedicados (útil em desenvolvimento).
- */
-function readWebClientIdFromGoogleServices(): string | undefined {
+function readOauthClientIdFromGoogleServices(clientType: number): string | undefined {
   const clients = (googleServices as GoogleServicesWithOauth).client?.[0]?.oauth_client;
   if (!clients?.length) {
     return undefined;
   }
-  const web = clients.find((c) => c.client_type === 3);
-  return web?.client_id;
+  const client = clients.find((c) => c.client_type === clientType);
+  return client?.client_id;
+}
+
+/**
+ * Client ID OAuth tipo "Web" do `google-services.json` (Firebase costuma colocar client_type 3).
+ */
+function readWebClientIdFromGoogleServices(): string | undefined {
+  return readOauthClientIdFromGoogleServices(3);
+}
+
+/**
+ * Client ID OAuth tipo "Android" do `google-services.json` (client_type 1).
+ * Ele aparece depois que o SHA-1/SHA-256 do app e o package name estao cadastrados no Firebase.
+ */
+function readAndroidClientIdFromGoogleServices(): string | undefined {
+  return readOauthClientIdFromGoogleServices(1);
 }
 
 export type ResponsavelGoogleAuthSessionConfig = {
@@ -33,7 +43,7 @@ export type ResponsavelGoogleAuthSessionConfig = {
   /** Fallback usado pelo expo-auth-session quando o client da plataforma não está definido. */
   clientId: string;
   selectAccount: true;
-  /** Nativo: redirect exato enviado ao Google (cadastrar no Google Cloud). */
+  /** Nativo: redirect exato enviado ao Google quando sobrescrito por env. */
   redirectUri?: string;
 };
 
@@ -43,10 +53,10 @@ export function isRunningInExpoGo(): boolean {
 }
 
 /**
- * URI de redirecionamento OAuth (tem que existir igual no Google Cloud → Credenciais → OAuth cliente Web).
+ * URI de redirecionamento OAuth.
  * Opcional: `EXPO_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI`.
  */
-export function getResponsavelGoogleOAuthRedirectUri(): string {
+export function getResponsavelGoogleOAuthRedirectUri(): string | undefined {
   const fromEnv =
     typeof process !== 'undefined' && process.env.EXPO_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI
       ? String(process.env.EXPO_PUBLIC_GOOGLE_OAUTH_REDIRECT_URI).trim()
@@ -57,13 +67,13 @@ export function getResponsavelGoogleOAuthRedirectUri(): string {
   if (Platform.OS === 'web') {
     return AuthSession.makeRedirectUri({ preferLocalhost: true });
   }
-  return AuthSession.makeRedirectUri({ scheme: 'amaidoso', path: 'oauth' });
+  return undefined;
 }
 
 /**
  * Config do Google para `expo-auth-session/providers/google`.
  * Prioridade: `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` → Web no google-services.json.
- * Opcional: `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`, `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` (build próprio / loja).
+ * Opcional: `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`, `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` (build proprio / loja).
  */
 export function getResponsavelGoogleAuthSessionConfig(): ResponsavelGoogleAuthSessionConfig {
   const fromEnv =
@@ -83,7 +93,7 @@ export function getResponsavelGoogleAuthSessionConfig(): ResponsavelGoogleAuthSe
   const android =
     typeof process !== 'undefined' && process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID
       ? String(process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID).trim()
-      : undefined;
+      : readAndroidClientIdFromGoogleServices();
   return {
     webClientId: web,
     iosClientId: ios || undefined,

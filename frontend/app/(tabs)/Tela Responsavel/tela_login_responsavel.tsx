@@ -14,19 +14,23 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PasswordInput, PasswordVisibilityToggle } from '@/components/password-input';
 import { ResponsavelGoogleSignInButton } from '@/components/responsavel-google-sign-in-button';
+import { useLanguage } from '@/contexts/language-context';
 import { useResponsavelProfile } from '@/contexts/responsavel-profile-context';
 import {
   getAuthErrorMessage,
   loginResponsavelFirebase,
   resendResponsavelEmailVerification,
 } from '@/lib/firebase-auth-service';
+import { setLastSessionRole } from '@/lib/session-preferences';
 
 const RESEND_COOLDOWN_SECONDS = 35;
 
 export default function HomeScreen() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState('');
   const [errorTitle, setErrorTitle] = React.useState('Erro no login');
   const [showErrorModal, setShowErrorModal] = React.useState(false);
@@ -37,6 +41,7 @@ export default function HomeScreen() {
   const [isResendingVerification, setIsResendingVerification] = React.useState(false);
   const [resendFeedback, setResendFeedback] = React.useState('');
   const { updateProfile } = useResponsavelProfile();
+  const { t } = useLanguage();
 
   const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   const openErrorModal = (title: string, message: string, allowResend = false) => {
@@ -63,19 +68,19 @@ export default function HomeScreen() {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (!normalizedEmail || !password) {
-      const message = 'Preencha e-mail e senha.';
-      openErrorModal('Campos obrigatórios', message);
+      const message = t('Preencha e-mail e senha.');
+      openErrorModal(t('Campos obrigatórios'), message);
       return;
     }
 
     if (password.length < 6) {
-      openErrorModal('Senha', 'Use pelo menos 6 caracteres.');
+      openErrorModal(t('Senha'), t('Use pelo menos 6 caracteres.'));
       return;
     }
 
     if (!isValidEmail(normalizedEmail)) {
-      const message = 'Digite um e-mail valido.';
-      openErrorModal('Email inválido', message);
+      const message = t('Digite um e-mail valido.');
+      openErrorModal(t('Email inválido'), message);
       return;
     }
 
@@ -85,6 +90,7 @@ export default function HomeScreen() {
       setIsSubmitting(true);
 
       const user = await loginResponsavelFirebase(normalizedEmail, password);
+      await setLastSessionRole('responsavel');
 
       updateProfile({
         nome: user.nome,
@@ -103,7 +109,7 @@ export default function HomeScreen() {
       if (isEmailNotVerified) {
         setResendCooldown(RESEND_COOLDOWN_SECONDS);
       }
-      openErrorModal('Erro no login', getAuthErrorMessage(error, 'email'), isEmailNotVerified);
+      openErrorModal(t('Erro no login'), t(getAuthErrorMessage(error, 'email')), isEmailNotVerified);
     } finally {
       setIsSubmitting(false);
     }
@@ -114,8 +120,8 @@ export default function HomeScreen() {
 
     if (!normalizedEmail || !password) {
       openErrorModal(
-        'Campos obrigatórios',
-        'Preencha e-mail e senha.',
+        t('Campos obrigatórios'),
+        t('Preencha e-mail e senha.'),
         true,
       );
       return;
@@ -130,10 +136,10 @@ export default function HomeScreen() {
       setResendFeedback('');
       await resendResponsavelEmailVerification(normalizedEmail, password);
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
-      setResendFeedback('Novo link enviado.');
+      setResendFeedback(t('Novo link enviado.'));
     } catch (error) {
       setResendFeedback('');
-      openErrorModal('Erro', getAuthErrorMessage(error, 'email'), true);
+      openErrorModal(t('Erro'), t(getAuthErrorMessage(error, 'email')), true);
     } finally {
       setIsResendingVerification(false);
     }
@@ -154,17 +160,17 @@ export default function HomeScreen() {
             activeOpacity={0.7}
             onPress={() => router.back()}
             style={styles.backButton}>
-            <Text style={styles.backButtonText}>Voltar</Text>
+            <Text style={styles.backButtonText}>{t('Voltar')}</Text>
           </TouchableOpacity>
           <Image
-            source={require('../../../assets/images/logo.jpeg')}
+            source={require('../../../assets/images/amaidoso-escrito.png')}
             style={styles.logo}
             contentFit="contain"
           />
 
-          <Text style={styles.title}>Entre Agora</Text>
+          <Text style={styles.title}>{t('Entre Agora')}</Text>
           <Text style={styles.subtitle}>
-            Por favor entre na sua conta para{'\n'}continuar usando nosso app
+            {t('Por favor entre na sua conta para')}{'\n'}{t('continuar usando nosso app')}
           </Text>
 
           <View style={styles.form}>
@@ -178,13 +184,13 @@ export default function HomeScreen() {
                 }
                 setCanResendVerification(false);
               }}
-              placeholder="Email"
+              placeholder={t('Email')}
               placeholderTextColor="#737373"
               style={styles.input}
               value={email}
             />
 
-            <TextInput
+            <PasswordInput
               onChangeText={(value) => {
                 setPassword(value);
                 if (showErrorModal) {
@@ -192,25 +198,33 @@ export default function HomeScreen() {
                 }
                 setCanResendVerification(false);
               }}
-              placeholder="Senha"
-              placeholderTextColor="#737373"
-              secureTextEntry
-              style={styles.input}
+              placeholder={t('Senha')}
+              fieldStyle={styles.input}
+              inputStyle={styles.passwordInputText}
+              showToggle={false}
+              visible={isPasswordVisible}
               value={password}
             />
+
+            <View style={styles.passwordActionsRow}>
+              <PasswordVisibilityToggle
+                visible={isPasswordVisible}
+                onPress={() => setIsPasswordVisible((current) => !current)}
+              />
+
+              <TouchableOpacity
+                activeOpacity={0.6}
+                onPress={() => router.push('./tela_recuperar_senha_responsavel')}
+                style={styles.forgotPasswordWrapper}>
+                <Text style={styles.forgotPasswordText}>{t('Recuperar senha')}</Text>
+              </TouchableOpacity>
+            </View>
 
             {errorMessage ? (
               <View style={styles.errorBox}>
                 <Text style={styles.errorText}>{errorMessage}</Text>
               </View>
             ) : null}
-
-            <TouchableOpacity
-              activeOpacity={0.6}
-              onPress={() => router.push('./tela_recuperar_senha_responsavel')}
-              style={styles.forgotPasswordWrapper}>
-              <Text style={styles.forgotPasswordText}>Recuperar senha</Text>
-            </TouchableOpacity>
 
             <TouchableOpacity
               activeOpacity={0.6}
@@ -222,23 +236,24 @@ export default function HomeScreen() {
                 end={{ x: 1, y: 0.5 }}
                 start={{ x: 0, y: 0.5 }}
                 style={styles.button}>
-                <Text style={styles.buttonText}>{isSubmitting ? 'Entrando...' : 'Entrar'}</Text>
+                <Text style={styles.buttonText}>{isSubmitting ? t('Entrando...') : t('Entrar')}</Text>
               </LinearGradient>
             </TouchableOpacity>
 
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>ou</Text>
+              <Text style={styles.dividerText}>{t('ou')}</Text>
               <View style={styles.dividerLine} />
             </View>
 
             <ResponsavelGoogleSignInButton
               disabled={isSubmitting}
               onBusyChange={setIsSubmitting}
-              onError={(message) => openErrorModal('Google', message)}
+              onError={(message) => openErrorModal('Google', t(message))}
               onSuccess={(user) => {
                 setErrorMessage('');
                 setShowErrorModal(false);
+                void setLastSessionRole('responsavel');
                 updateProfile({
                   nome: user.nome,
                   usuario: user.nome,
@@ -251,12 +266,12 @@ export default function HomeScreen() {
             />
 
             <View style={styles.signupRow}>
-              <Text style={styles.signupText}>Não possui uma conta?</Text>
+              <Text style={styles.signupText}>{t('Não possui uma conta?')}</Text>
               <TouchableOpacity
                 activeOpacity={0.6}
                 onPress={() => router.push('./tela_cadastro_responsavel')}
                 style={styles.signupLinkWrapper}>
-                <Text style={styles.signupHighlight}>Cria uma agora</Text>
+                <Text style={styles.signupHighlight}>{t('Cria uma agora')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -291,10 +306,10 @@ export default function HomeScreen() {
                 ]}>
                 <Text style={styles.modalResendButtonText}>
                   {isResendingVerification
-                    ? 'Reenviando...'
+                    ? t('Reenviando...')
                     : resendCooldown > 0
-                      ? `Reenviar link em ${resendCooldown}s`
-                      : 'Reenviar link'}
+                      ? `${t('Reenviar link em')} ${resendCooldown}s`
+                      : t('Reenviar link')}
                 </Text>
               </TouchableOpacity>
             ) : null}
@@ -303,7 +318,7 @@ export default function HomeScreen() {
               activeOpacity={0.85}
               onPress={() => setShowErrorModal(false)}
               style={styles.modalErrorButton}>
-              <Text style={styles.modalButtonText}>Fechar</Text>
+              <Text style={styles.modalButtonText}>{t('Fechar')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -320,14 +335,14 @@ export default function HomeScreen() {
             <View style={styles.modalIconWrap}>
               <Text style={styles.modalIcon}>✓</Text>
             </View>
-            <Text style={styles.modalTitle}>Login feito</Text>
-            <Text style={styles.modalText}>Pode continuar.</Text>
+            <Text style={styles.modalTitle}>{t('Login feito')}</Text>
+            <Text style={styles.modalText}>{t('Pode continuar.')}</Text>
 
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={handleContinue}
               style={styles.modalButton}>
-              <Text style={styles.modalButtonText}>Continuar</Text>
+              <Text style={styles.modalButtonText}>{t('Continuar')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -403,6 +418,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     marginBottom: 16,
   },
+  passwordInputText: {
+    fontSize: 16,
+    color: '#151515',
+  },
+  passwordActionsRow: {
+    minHeight: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: -8,
+    marginBottom: 34,
+  },
   errorBox: {
     borderRadius: 14,
     backgroundColor: '#FFE5E5',
@@ -418,9 +446,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   forgotPasswordWrapper: {
-    alignSelf: 'flex-end',
-    marginTop: -4,
-    marginBottom: 42,
+    minHeight: 28,
+    justifyContent: 'center',
   },
   forgotPasswordText: {
     fontSize: 11,

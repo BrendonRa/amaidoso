@@ -1,8 +1,10 @@
 import { router } from 'expo-router';
 import React from 'react';
-import { Image, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, SafeAreaView as SafeAreaInsetsView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useIdosoProfile } from '@/contexts/idoso-profile-context';
+import { useLanguage } from '@/contexts/language-context';
 import IdosoBottomNav from './IdosoBottomNav';
 
 type Card = {
@@ -18,28 +20,31 @@ const cards: Card[] = [
 
 export default function TelaPrincipalIdoso() {
   const { profile } = useIdosoProfile();
-  const firstName = profile?.nome?.split(' ')[0] || 'Idoso';
+  const { t } = useLanguage();
+  const firstName = profile?.nome?.split(' ')[0] || t('senior');
   const photoUri =
     profile?.fotoPerfil && profile.fotoPerfil !== 'imagem_padrao.png' ? profile.fotoPerfil : null;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.greeting}>Ola, {firstName}</Text>
+    <SafeAreaView edges={['left', 'right']} style={styles.container}>
+      <SafeAreaInsetsView edges={['top']} style={styles.headerSafeArea}>
+        <View style={styles.header}>
+          <Text style={styles.greeting}>{t('Ola')}, {firstName}</Text>
 
-        <View style={styles.avatar}>
-          {photoUri ? (
-            <Image source={{ uri: photoUri }} style={styles.avatarImage} />
-          ) : (
-            <Ionicons name="person" size={22} color="#F58220" />
-          )}
+          <View style={styles.avatar}>
+            {photoUri ? (
+              <Image source={{ uri: photoUri }} style={styles.avatarImage} />
+            ) : (
+              <Ionicons name="person" size={22} color="#F58220" />
+            )}
+          </View>
         </View>
-      </View>
+      </SafeAreaInsetsView>
 
       <View style={styles.content}>
         {cards.map((card) => (
           <View key={card.title} style={styles.card}>
-            <Text style={styles.cardTitle}>{card.title}</Text>
+            <Text style={styles.cardTitle}>{t(card.title)}</Text>
 
             <TouchableOpacity
               activeOpacity={0.85}
@@ -50,7 +55,7 @@ export default function TelaPrincipalIdoso() {
               }}
               disabled={!card.route}
               style={styles.button}>
-              <Text style={styles.buttonText}>{card.route ? 'Entrar' : 'Em breve'}</Text>
+              <Text style={styles.buttonText}>{card.route ? t('Entrar') : t('Em breve')}</Text>
             </TouchableOpacity>
           </View>
         ))}
@@ -64,6 +69,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F2F2F2',
+  },
+  headerSafeArea: {
+    backgroundColor: '#F58220',
   },
   header: {
     backgroundColor: '#F58220',

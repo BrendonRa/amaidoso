@@ -15,7 +15,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { PasswordInput, PasswordVisibilityToggle } from '@/components/password-input';
 import { ResponsavelGoogleSignInButton } from '@/components/responsavel-google-sign-in-button';
+import { useLanguage } from '@/contexts/language-context';
 import { useResponsavelProfile } from '@/contexts/responsavel-profile-context';
 import {
   getAuthErrorMessage,
@@ -23,15 +25,18 @@ import {
   resendCurrentResponsavelEmailVerification,
 } from '@/lib/firebase-auth-service';
 import { getFirebaseAuth } from '@/lib/firebase';
+import { setLastSessionRole } from '@/lib/session-preferences';
 
 const RESEND_COOLDOWN_SECONDS = 35;
 
 export default function TelaCadastroResponsavel() {
   const { updateProfile } = useResponsavelProfile();
+  const { t } = useLanguage();
   const [username, setUsername] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [confirmPassword, setConfirmPassword] = React.useState('');
+  const [showPasswords, setShowPasswords] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [verificationEmail, setVerificationEmail] = React.useState('');
   const [showVerificationModal, setShowVerificationModal] = React.useState(false);
@@ -76,24 +81,24 @@ export default function TelaCadastroResponsavel() {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (!normalizedName || !normalizedEmail || !password || !confirmPassword) {
-      setFormError('Preencha todos os campos.');
+      setFormError(t('Preencha todos os campos.'));
       return;
     }
 
     if (!isValidEmail(normalizedEmail)) {
       setFormError('');
-      Alert.alert('Email inválido', 'Digite um email valido.');
+      Alert.alert(t('Email inválido'), t('Digite um email valido.'));
       return;
     }
 
     if (password.length < 6) {
       setFormError('');
-      Alert.alert('Senha', 'Use pelo menos 6 caracteres.');
+      Alert.alert(t('Senha'), t('Use pelo menos 6 caracteres.'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setFormError('As senhas nao sao iguais.');
+      setFormError(t('As senhas nao sao iguais.'));
       return;
     }
 
@@ -119,10 +124,10 @@ export default function TelaCadastroResponsavel() {
       const timedOut =
         error instanceof Error && error.message === 'TIMEOUT_CADASTRO';
       Alert.alert(
-        timedOut ? 'Demorou demais' : 'Erro no cadastro',
+        timedOut ? t('Demorou demais') : t('Erro no cadastro'),
         timedOut
-          ? 'Tente de novo.'
-          : getAuthErrorMessage(error, 'email'),
+          ? t('Tente de novo.')
+          : t(getAuthErrorMessage(error, 'email')),
       );
     } finally {
       setIsSubmitting(false);
@@ -145,9 +150,9 @@ export default function TelaCadastroResponsavel() {
       setResendFeedback('');
       await resendCurrentResponsavelEmailVerification();
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
-      setResendFeedback('Novo link enviado.');
+      setResendFeedback(t('Novo link enviado.'));
     } catch (error) {
-      Alert.alert('Erro', getAuthErrorMessage(error, 'email'));
+      Alert.alert(t('Erro'), t(getAuthErrorMessage(error, 'email')));
     } finally {
       setIsResending(false);
     }
@@ -163,17 +168,17 @@ export default function TelaCadastroResponsavel() {
             activeOpacity={0.7}
             onPress={() => router.back()}
             style={styles.backButton}>
-            <Text style={styles.backButtonText}>Voltar</Text>
+            <Text style={styles.backButtonText}>{t('Voltar')}</Text>
           </TouchableOpacity>
           <Image
-            source={require('../../../assets/images/logo.jpeg')}
+            source={require('../../../assets/images/amaidoso-escrito.png')}
             style={styles.logo}
             contentFit="contain"
           />
 
-          <Text style={styles.title}>Crie Agora</Text>
+          <Text style={styles.title}>{t('Crie Agora')}</Text>
           <Text style={styles.subtitle}>
-            Preencha os campos com suas{'\n'}informações
+            {t('Preencha os campos com suas')}{'\n'}{t('informações')}
           </Text>
 
           <View style={styles.form}>
@@ -185,7 +190,7 @@ export default function TelaCadastroResponsavel() {
                   setFormError('');
                 }
               }}
-              placeholder="Nome de Usuário"
+              placeholder={t('Nome de Usuário')}
               placeholderTextColor="#737373"
               style={styles.input}
               value={username}
@@ -200,38 +205,46 @@ export default function TelaCadastroResponsavel() {
                   setFormError('');
                 }
               }}
-              placeholder="Email"
+              placeholder={t('Email')}
               placeholderTextColor="#737373"
               style={styles.input}
               value={email}
             />
 
-            <TextInput
+            <PasswordInput
               onChangeText={(value) => {
                 setPassword(value);
                 if (formError) {
                   setFormError('');
                 }
               }}
-              placeholder="Senha"
-              placeholderTextColor="#737373"
-              secureTextEntry
-              style={styles.input}
+              placeholder={t('Senha')}
+              fieldStyle={styles.input}
+              inputStyle={styles.passwordInputText}
+              showToggle={false}
+              visible={showPasswords}
               value={password}
             />
 
-            <TextInput
+            <PasswordInput
               onChangeText={(value) => {
                 setConfirmPassword(value);
                 if (formError) {
                   setFormError('');
                 }
               }}
-              placeholder="Confirmar senha"
-              placeholderTextColor="#737373"
-              secureTextEntry
-              style={styles.input}
+              placeholder={t('Confirmar senha')}
+              containerStyle={styles.confirmPasswordField}
+              fieldStyle={styles.input}
+              inputStyle={styles.passwordInputText}
+              showToggle={false}
+              visible={showPasswords}
               value={confirmPassword}
+            />
+            <PasswordVisibilityToggle
+              visible={showPasswords}
+              onPress={() => setShowPasswords((current) => !current)}
+              style={styles.sharedPasswordToggle}
             />
 
             {formError ? (
@@ -251,22 +264,23 @@ export default function TelaCadastroResponsavel() {
                 start={{ x: 0, y: 0.5 }}
                 style={styles.button}>
                 <Text style={styles.buttonText}>
-                  {isSubmitting ? 'Criando...' : 'Criar Conta'}
+                  {isSubmitting ? t('Criando...') : t('Criar Conta')}
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
 
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>ou</Text>
+              <Text style={styles.dividerText}>{t('ou')}</Text>
               <View style={styles.dividerLine} />
             </View>
 
             <ResponsavelGoogleSignInButton
               disabled={isSubmitting}
               onBusyChange={setIsSubmitting}
-              onError={(message) => Alert.alert('Google', message)}
+              onError={(message) => Alert.alert('Google', t(message))}
               onSuccess={(user) => {
+                void setLastSessionRole('responsavel');
                 updateProfile({
                   nome: user.nome,
                   usuario: user.nome,
@@ -279,12 +293,12 @@ export default function TelaCadastroResponsavel() {
             />
 
             <View style={styles.signupRow}>
-              <Text style={styles.signupText}>Possui uma conta?</Text>
+              <Text style={styles.signupText}>{t('Possui uma conta?')}</Text>
               <TouchableOpacity
                 activeOpacity={0.6}
                 onPress={() => router.push('./tela_login_responsavel')}
                 style={styles.signupLinkWrapper}>
-                <Text style={styles.signupHighlight}>Entre agora</Text>
+                <Text style={styles.signupHighlight}>{t('Entre agora')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -302,9 +316,9 @@ export default function TelaCadastroResponsavel() {
               <Text style={styles.modalIcon}>@</Text>
             </View>
 
-            <Text style={styles.modalTitle}>Confirme seu e-mail</Text>
-            <Text style={styles.modalText}>Enviamos um link para {verificationEmail}.</Text>
-            <Text style={styles.modalHint}>Abra o e-mail e toque no link.</Text>
+            <Text style={styles.modalTitle}>{t('Confirme seu e-mail')}</Text>
+            <Text style={styles.modalText}>{t('Enviamos um link para')} {verificationEmail}.</Text>
+            <Text style={styles.modalHint}>{t('Abra o e-mail e toque no link.')}</Text>
 
             {resendFeedback ? <Text style={styles.resendFeedback}>{resendFeedback}</Text> : null}
 
@@ -312,7 +326,7 @@ export default function TelaCadastroResponsavel() {
               activeOpacity={0.85}
               onPress={handleGoToLogin}
               style={styles.modalPrimaryButton}>
-              <Text style={styles.modalPrimaryButtonText}>Ir para login</Text>
+              <Text style={styles.modalPrimaryButtonText}>{t('Ir para login')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -325,10 +339,10 @@ export default function TelaCadastroResponsavel() {
               ]}>
               <Text style={styles.modalSecondaryButtonText}>
                 {isResending
-                  ? 'Reenviando...'
+                  ? t('Reenviando...')
                   : resendCooldown > 0
-                    ? `Reenviar link em ${resendCooldown}s`
-                    : 'Reenviar link'}
+                    ? `${t('Reenviar link em')} ${resendCooldown}s`
+                    : t('Reenviar link')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -401,6 +415,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#151515',
     backgroundColor: '#FFFFFF',
+    marginBottom: 16,
+  },
+  passwordInputText: {
+    fontSize: 16,
+    color: '#151515',
+  },
+  confirmPasswordField: {
+    marginBottom: 0,
+  },
+  sharedPasswordToggle: {
     marginBottom: 16,
   },
   errorBox: {
