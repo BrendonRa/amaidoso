@@ -31,7 +31,7 @@ type InfoCard = {
 const teamMembers: TeamMember[] = [
   {
     name: 'Felipe',
-    roleKey: 'Banco de Dados e Documentação',
+    roleKey: 'Banco de Dados',
     initials: 'F',
     accent: '#F58220',
     avatar: require('../assets/images/felipe-avatar.jpg'),
@@ -101,7 +101,7 @@ export function AboutTeamScreen() {
         showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
           <View style={styles.logoWrap}>
-            <Image source={require('../assets/images/amaidoso-escrito.png')} style={styles.logo} />
+            <Image source={require('../assets/images/amaidoso-logo.png')} style={styles.logo} />
           </View>
 
           <View style={styles.heroText}>

@@ -25,7 +25,6 @@ import {
   resendCurrentResponsavelEmailVerification,
 } from '@/lib/firebase-auth-service';
 import { getFirebaseAuth } from '@/lib/firebase';
-import { setLastSessionRole } from '@/lib/session-preferences';
 
 const RESEND_COOLDOWN_SECONDS = 35;
 
@@ -171,7 +170,7 @@ export default function TelaCadastroResponsavel() {
             <Text style={styles.backButtonText}>{t('Voltar')}</Text>
           </TouchableOpacity>
           <Image
-            source={require('../../../assets/images/amaidoso-escrito.png')}
+            source={require('../../../assets/images/logo.jpeg')}
             style={styles.logo}
             contentFit="contain"
           />
@@ -280,7 +279,6 @@ export default function TelaCadastroResponsavel() {
               onBusyChange={setIsSubmitting}
               onError={(message) => Alert.alert('Google', t(message))}
               onSuccess={(user) => {
-                void setLastSessionRole('responsavel');
                 updateProfile({
                   nome: user.nome,
                   usuario: user.nome,

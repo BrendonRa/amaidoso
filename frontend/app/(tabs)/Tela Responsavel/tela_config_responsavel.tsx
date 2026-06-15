@@ -9,7 +9,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { languageOptions, useLanguage, type AppLanguage } from '@/contexts/language-context';
 import { useResponsavelProfile } from '@/contexts/responsavel-profile-context';
 import { getFirebaseAuth } from '@/lib/firebase';
-import { clearLastSessionRole } from '@/lib/session-preferences';
 
 const RESPONSAVEL_NOTIFICATIONS_KEY = '@amaidoso:responsavel-notifications-enabled';
 
@@ -63,16 +62,13 @@ export default function TelaConfigResponsavel() {
     } catch {
       // continua fluxo de saída mesmo se signOut falhar
     }
-    await clearLastSessionRole().catch(() => undefined);
     router.push('../Tela Idoso/tela_inicio1');
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{t('configuration')}</Text>
-        </View>
+        <Text style={styles.title}>{t('configuration')}</Text>
 
         <View style={styles.profileSummary}>
           {photoUri ? (
@@ -267,17 +263,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-  },
-  header: {
-    paddingTop: 14,
-    paddingHorizontal: 18,
-    paddingBottom: 18,
-    alignItems: 'flex-start',
+    paddingTop: 26,
   },
   title: {
-    fontSize: 24,
+    fontSize: 31,
     fontWeight: '800',
-    color: '#202020',
+    color: '#101010',
+    textAlign: 'center',
+    marginBottom: 36,
   },
   list: {
     flex: 1,

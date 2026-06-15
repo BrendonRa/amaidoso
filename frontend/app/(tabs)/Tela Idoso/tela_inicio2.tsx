@@ -6,7 +6,7 @@ import { router } from 'expo-router';
 export default function Tela_inicio2(){
 return(
     <SafeAreaView style={styles.container}>
-        <Image source={require('../../../assets/images/amaidoso-escrito.png')}style={styles.logo}/>
+        <Image source={require('../../../assets/images/logo.jpeg')}style={styles.logo}/>
         <Text style={styles.title}>Bem Vindo ao Amaidoso</Text>
         <Text style={styles.subtitle}>Selecione uma opção abaixo:</Text>
 

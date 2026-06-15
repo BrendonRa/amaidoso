@@ -2,7 +2,6 @@ import * as Google from 'expo-auth-session/providers/google';
 import { Image } from 'expo-image';
 import React from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
 import {
   getAuthErrorMessage,
@@ -32,28 +31,17 @@ export function ResponsavelGoogleSignInButton({
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest(googleConfig);
 
   const processingRef = React.useRef(false);
-  const missingAndroidGoogleClient = Platform.OS === 'android' && !googleConfig.androidClientId;
 
   React.useEffect(() => {
-    if (Platform.OS !== 'web') {
-      GoogleSignin.configure({
-        webClientId: googleConfig.webClientId,
-        scopes: ['profile', 'email'],
-      });
-    }
-  }, [googleConfig.webClientId]);
-
-  React.useEffect(() => {
-    if (__DEV__ && missingAndroidGoogleClient && !isRunningInExpoGo()) {
+    if (__DEV__ && Platform.OS !== 'web' && !isRunningInExpoGo()) {
       const uri = getResponsavelGoogleOAuthRedirectUri();
        
       console.warn(
-        '[Google OAuth] O APK precisa de um OAuth client Android no Firebase/Google Cloud. ' +
-          'Cadastre o package com.amaidoso.app com o SHA-1/SHA-256 da assinatura do EAS e baixe um novo google-services.json.' +
-          (uri ? ` Redirect sobrescrito por env: ${uri}` : ''),
+        `[Google OAuth] Cadastre no Google Cloud → APIs e serviços → Credenciais → Cliente OAuth Web (mesmo ID do Firebase) ` +
+          `esta URI em "URIs de redirecionamento autorizados" (copie exatamente):\n${uri}`,
       );
     }
-  }, [missingAndroidGoogleClient]);
+  }, []);
 
   const setBusy = React.useCallback(
     (v: boolean) => {
@@ -124,40 +112,6 @@ export function ResponsavelGoogleSignInButton({
       onError('O login com Google não está disponível no Expo Go. Use e-mail e senha neste ambiente.');
       return;
     }
-    if (Platform.OS === 'android') {
-      try {
-        setBusy(true);
-        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-        const result = await GoogleSignin.signIn();
-        if (result.type === 'cancelled') {
-          setBusy(false);
-          return;
-        }
-
-        const idToken = result.data.idToken;
-        if (!idToken) {
-          throw new Error('Sua conta Google não retornou um token de acesso. Tente novamente.');
-        }
-
-        const tokens = await GoogleSignin.getTokens().catch(() => null);
-        const user = await signInResponsavelWithGoogleFromIdToken(idToken, tokens?.accessToken ?? null);
-        onSuccess(user);
-      } catch (e) {
-        const code = e && typeof e === 'object' && 'code' in e ? String((e as { code: string }).code) : '';
-        if (code !== statusCodes.SIGN_IN_CANCELLED) {
-          onError(getAuthErrorMessage(e, 'google'));
-        }
-      } finally {
-        setBusy(false);
-      }
-      return;
-    }
-    if (missingAndroidGoogleClient) {
-      onError(
-        'Para usar Google no APK, cadastre o SHA-1/SHA-256 do build Android no Firebase e baixe o google-services.json atualizado.',
-      );
-      return;
-    }
     if (!request) {
       return;
     }
@@ -180,7 +134,7 @@ export function ResponsavelGoogleSignInButton({
       setBusy(false);
       onError(getAuthErrorMessage(e, 'google'));
     }
-  }, [missingAndroidGoogleClient, onError, onSuccess, promptAsync, request, setBusy]);
+  }, [onError, onSuccess, promptAsync, request, setBusy]);
 
   const buttonDisabled =
     disabled || (Platform.OS !== 'web' && !isRunningInExpoGo() && !request);

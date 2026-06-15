@@ -23,7 +23,6 @@ import {
   loginResponsavelFirebase,
   resendResponsavelEmailVerification,
 } from '@/lib/firebase-auth-service';
-import { setLastSessionRole } from '@/lib/session-preferences';
 
 const RESEND_COOLDOWN_SECONDS = 35;
 
@@ -90,7 +89,6 @@ export default function HomeScreen() {
       setIsSubmitting(true);
 
       const user = await loginResponsavelFirebase(normalizedEmail, password);
-      await setLastSessionRole('responsavel');
 
       updateProfile({
         nome: user.nome,
@@ -163,7 +161,7 @@ export default function HomeScreen() {
             <Text style={styles.backButtonText}>{t('Voltar')}</Text>
           </TouchableOpacity>
           <Image
-            source={require('../../../assets/images/amaidoso-escrito.png')}
+            source={require('../../../assets/images/logo.jpeg')}
             style={styles.logo}
             contentFit="contain"
           />
@@ -253,7 +251,6 @@ export default function HomeScreen() {
               onSuccess={(user) => {
                 setErrorMessage('');
                 setShowErrorModal(false);
-                void setLastSessionRole('responsavel');
                 updateProfile({
                   nome: user.nome,
                   usuario: user.nome,

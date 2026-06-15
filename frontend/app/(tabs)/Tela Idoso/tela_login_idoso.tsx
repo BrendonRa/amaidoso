@@ -18,7 +18,6 @@ import { PasswordInput } from '@/components/password-input';
 import { useIdosoProfile } from '@/contexts/idoso-profile-context';
 import { useLanguage } from '@/contexts/language-context';
 import { getAuthErrorMessage, loginIdosoFirebase } from '@/lib/firebase-auth-service';
-import { setLastSessionRole } from '@/lib/session-preferences';
 
 export default function TelaLoginIdoso() {
   const [cpf, setCpf] = React.useState('');
@@ -82,7 +81,6 @@ export default function TelaLoginIdoso() {
       setIsSubmitting(true);
 
       const user = await loginIdosoFirebase(cpf.trim(), senha);
-      await setLastSessionRole('idoso');
       setProfile({
         uid: user.uid,
         nome: user.nome,
@@ -119,7 +117,7 @@ export default function TelaLoginIdoso() {
           </TouchableOpacity>
 
           <Image
-            source={require('../../../assets/images/amaidoso-escrito.png')}
+            source={require('../../../assets/images/logo.jpeg')}
             style={styles.logo}
             contentFit="contain"
           />

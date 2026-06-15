@@ -26,7 +26,6 @@ import {
   setIdosoNotificationsEnabled,
   updateCurrentIdosoPhoto,
 } from '@/lib/idoso-data-service';
-import { clearLastSessionRole } from '@/lib/session-preferences';
 import IdosoBottomNav from './IdosoBottomNav';
 
 export default function TelaConfiguracaoIdoso() {
@@ -149,7 +148,6 @@ export default function TelaConfiguracaoIdoso() {
     } catch {
       // segue fluxo
     }
-    await clearLastSessionRole().catch(() => undefined);
     clearProfile();
     router.push('./tela_inicio1');
   };
@@ -157,9 +155,7 @@ export default function TelaConfiguracaoIdoso() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{t('configuration')}</Text>
-        </View>
+        <Text style={styles.title}>{t('settings')}</Text>
         {profile ? (
           <View style={styles.profileSummary}>
             {photoUri ? (
@@ -386,17 +382,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-  },
-  header: {
-    paddingTop: 14,
-    paddingHorizontal: 18,
-    paddingBottom: 18,
-    alignItems: 'flex-start',
+    paddingTop: 26,
   },
   title: {
-    fontSize: 24,
+    fontSize: 31,
     fontWeight: '800',
-    color: '#202020',
+    color: '#101010',
+    textAlign: 'center',
+    marginBottom: 36,
   },
   list: {
     flex: 1,

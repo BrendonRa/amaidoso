@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Amaidoso",
+    "slug": "amaidoso",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/amaidoso-logo-app.png",
+    "scheme": "amaidoso",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/images/amaidoso-logo-app.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.amaidoso.app"
+    },
+    "android": {
+      "package": "com.amaidoso.app",
+      "googleServicesFile": "./google-services.json",
+      "userInterfaceStyle": "light",
+      "splash": {
+        "image": "./assets/images/amaidoso-logo-app.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#ffffff"
+      },
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/images/amaidoso-logo-app.png"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "@react-native-google-signin/google-signin"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "d621f8ba-cd36-49a4-aadf-3086ce2b76c6"
+      }
+    }
+  }
+}

@@ -8,7 +8,7 @@ export default function TelaInicio() {
     <SafeAreaView style={styles.container}>
 
       <Image
-        source={require('../../../assets/images/amaidoso-escrito.png')}
+        source={require('../../../assets/images/logo.jpeg')}
         style={styles.logo}
       />
 
